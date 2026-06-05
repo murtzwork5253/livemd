@@ -5,12 +5,22 @@ import { EditorPane } from './components/Editor/EditorPane';
 import { PreviewPane } from './components/Preview/PreviewPane';
 import { Toolbar } from './components/Toolbar/Toolbar';
 import { useAutosave } from './hooks/useAutosave';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import './App.css';
 
 export default function App() {
   const { state, dispatch } = useMarkdown();
   const editorRef = useRef<ReactCodeMirrorRef>(null);
+
+  const handleSave = () => {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('livemd-markdown', state.markdown);
+      dispatch({ type: 'SET_LAST_SAVED', payload: new Date() });
+    }
+  };
+
   useAutosave('livemd-markdown', state.markdown, 1000);
+  useKeyboardShortcuts({ editorRef, onSave: handleSave });
   const [editorWidth, setEditorWidth] = useState(50); // percentage
   const isResizing = useRef(false);
 
