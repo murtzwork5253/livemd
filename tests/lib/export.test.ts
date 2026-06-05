@@ -1,0 +1,75 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { exportMarkdown } from '../../src/lib/export';
+
+describe('exportMarkdown', () => {
+  beforeEach(() => {
+    const mockElement = {
+      href: '',
+      download: '',
+      click: vi.fn(),
+    };
+
+    const mockDocument = {
+      createElement: vi.fn().mockReturnValue(mockElement),
+    };
+
+    const mockURL = {
+      createObjectURL: vi.fn().mockReturnValue('blob:http://localhost/mock-uuid'),
+      revokeObjectURL: vi.fn(),
+    };
+
+    Object.defineProperty(globalThis, 'document', {
+      value: mockDocument,
+      writable: true,
+      configurable: true,
+    });
+
+    Object.defineProperty(globalThis, 'URL', {
+      value: mockURL,
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  afterEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (globalThis as any).document;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (globalThis as any).URL;
+  });
+
+  it('should create a blob, assign URL, trigger download, and revoke URL', () => {
+    const content = '# Hello World';
+    const filename = 'test-doc.md';
+
+    exportMarkdown(content, filename);
+
+    // Verify document.createElement was called with 'a'
+    expect(document.createElement).toHaveBeenCalledWith('a');
+
+    // Verify URL.createObjectURL was called with a Blob
+    expect(URL.createObjectURL).toHaveBeenCalled();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const blobArg = (URL.createObjectURL as any).mock.calls[0][0];
+    expect(blobArg).toBeInstanceOf(Blob);
+
+    // Verify anchor properties and click action
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const createdElement = (document.createElement as any).mock.results[0].value;
+    expect(createdElement.href).toBe('blob:http://localhost/mock-uuid');
+    expect(createdElement.download).toBe(filename);
+    expect(createdElement.click).toHaveBeenCalled();
+
+    // Verify URL.revokeObjectURL was called to clean up
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:http://localhost/mock-uuid');
+  });
+
+  it('should use default filename when none is provided', () => {
+    const content = '# Hello World';
+    exportMarkdown(content);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const createdElement = (document.createElement as any).mock.results[0].value;
+    expect(createdElement.download).toBe('document.md');
+  });
+});

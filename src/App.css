@@ -51,7 +51,8 @@
   color: var(--text-primary);
 }
 
-.theme-toggle button {
+.theme-toggle button,
+.export-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,13 +67,15 @@
   transition: all 0.15s ease;
 }
 
-.theme-toggle button:hover {
+.theme-toggle button:hover,
+.export-btn:hover {
   background: var(--bg-secondary);
   border-color: var(--text-muted);
   color: var(--accent-blue);
 }
 
-.theme-icon {
+.theme-icon,
+.header-icon {
   width: 18px;
   height: 18px;
   fill: none;
@@ -80,6 +83,12 @@
   stroke-width: 2px;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .view-mode-toggle button.active {

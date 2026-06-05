@@ -6,11 +6,13 @@ import { PreviewPane } from './components/Preview/PreviewPane';
 import { Toolbar } from './components/Toolbar/Toolbar';
 import { useAutosave } from './hooks/useAutosave';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { ExportModal } from './components/ExportModal/ExportModal';
 import './App.css';
 
 export default function App() {
   const { state, dispatch } = useMarkdown();
   const editorRef = useRef<ReactCodeMirrorRef>(null);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   const handleSave = () => {
     if (typeof localStorage !== 'undefined') {
@@ -128,24 +130,46 @@ export default function App() {
             </svg>
           </button>
         </div>
-        <div className="theme-toggle">
+        <div className="header-right">
           <button
-            onClick={() =>
-              dispatch({ type: 'SET_THEME', payload: state.theme === 'dark' ? 'light' : 'dark' })
-            }
-            title={state.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="export-btn"
+            onClick={() => setIsExportOpen(true)}
+            title="Export Document"
+            aria-label="Export Document"
           >
-            {state.theme === 'dark' ? (
-              <svg viewBox="0 0 24 24" className="theme-icon">
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" className="theme-icon">
-                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-              </svg>
-            )}
+            <svg
+              viewBox="0 0 24 24"
+              className="header-icon"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" x2="12" y1="15" y2="3" />
+            </svg>
           </button>
+          <div className="theme-toggle">
+            <button
+              onClick={() =>
+                dispatch({ type: 'SET_THEME', payload: state.theme === 'dark' ? 'light' : 'dark' })
+              }
+              title={state.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {state.theme === 'dark' ? (
+                <svg viewBox="0 0 24 24" className="theme-icon">
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" className="theme-icon">
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -173,6 +197,12 @@ export default function App() {
           </div>
         )}
       </main>
+
+      <ExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        markdownContent={state.markdown}
+      />
     </div>
   );
 }
