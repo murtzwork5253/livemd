@@ -106,22 +106,27 @@ export function Toolbar({ editorRef }: ToolbarProps) {
     <div className="editor-toolbar">
       <button onClick={() => handleFormat('bold')} title="Bold (Ctrl+B)">
         <svg viewBox="0 0 24 24" className="toolbar-icon">
-          <path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 11h-3.5v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z" />
+          <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
+          <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
         </svg>
       </button>
       <button onClick={() => handleFormat('italic')} title="Italic (Ctrl+I)">
         <svg viewBox="0 0 24 24" className="toolbar-icon">
-          <path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z" />
+          <line x1="19" y1="4" x2="10" y2="4" />
+          <line x1="14" y1="20" x2="5" y2="20" />
+          <line x1="15" y1="4" x2="9" y2="20" />
         </svg>
       </button>
       <button onClick={() => handleFormat('strikethrough')} title="Strikethrough (Ctrl+Shift+X)">
         <svg viewBox="0 0 24 24" className="toolbar-icon">
-          <path d="M10 19h4v-3h-4v3zM5 4v3h5v3H4v3h6v2H5v3h5v2h4v-2h5v-3h-5v-2h6V7h-7V4H5z" />
+          <path d="M16 4H9a3 3 0 0 0-2.83 4 3 3 0 0 0 2.5 4h6.66a3 3 0 0 1 2.5 4 3 3 0 0 1-2.83 4H7" />
+          <line x1="4" y1="12" x2="20" y2="12" />
         </svg>
       </button>
       <button onClick={() => handleFormat('code')} title="Code (Ctrl+`)">
         <svg viewBox="0 0 24 24" className="toolbar-icon">
-          <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" />
+          <polyline points="16 18 22 12 16 6" />
+          <polyline points="8 6 2 12 8 18" />
         </svg>
       </button>
       <div className="toolbar-divider" />
@@ -137,17 +142,20 @@ export function Toolbar({ editorRef }: ToolbarProps) {
       <div className="toolbar-divider" />
       <button onClick={() => handleFormat('link')} title="Link (Ctrl+K)">
         <svg viewBox="0 0 24 24" className="toolbar-icon">
-          <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
         </svg>
       </button>
       <button onClick={() => handleFormat('image')} title="Image">
         <svg viewBox="0 0 24 24" className="toolbar-icon">
-          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none" />
+          <polyline points="21 15 16 10 5 21" />
         </svg>
       </button>
       <button onClick={() => handleFormat('quote')} title="Quote">
         <svg viewBox="0 0 24 24" className="toolbar-icon">
-          <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z" />
+          <path d="M16 13a4 4 0 0 1-4-4V5h4v4h-2a2 2 0 0 0 2 2zM8 13A4 4 0 0 1 4 9V5h4v4H6a2 2 0 0 0 2 2z" />
         </svg>
       </button>
     </div>
