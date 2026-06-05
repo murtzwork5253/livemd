@@ -66,24 +66,66 @@ export default function App() {
         <div className="header-left">
           <h1>LiveMD</h1>
         </div>
-        <div className="view-mode-toggle">
+        <div className="view-mode-toggle" role="group" aria-label="View mode selection">
           <button
             className={state.viewMode === 'editor' ? 'active' : ''}
             onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'editor' })}
+            title="Editor view"
+            aria-label="Editor view"
+            aria-pressed={state.viewMode === 'editor'}
           >
-            Editor
+            <svg
+              viewBox="0 0 24 24"
+              className="toggle-icon"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
           </button>
           <button
             className={state.viewMode === 'split' ? 'active' : ''}
             onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'split' })}
+            title="Split view"
+            aria-label="Split view"
+            aria-pressed={state.viewMode === 'split'}
           >
-            Split
+            <svg
+              viewBox="0 0 24 24"
+              className="toggle-icon"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect width="18" height="18" x="3" y="3" rx="2" />
+              <path d="M12 3v18" />
+            </svg>
           </button>
           <button
             className={state.viewMode === 'preview' ? 'active' : ''}
             onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'preview' })}
+            title="Preview view"
+            aria-label="Preview view"
+            aria-pressed={state.viewMode === 'preview'}
           >
-            Preview
+            <svg
+              viewBox="0 0 24 24"
+              className="toggle-icon"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
           </button>
         </div>
         <div className="theme-toggle">
