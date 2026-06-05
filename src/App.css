@@ -66,6 +66,8 @@
 .editor-pane {
   background-color: var(--bg-primary);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .preview-pane {

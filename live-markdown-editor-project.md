@@ -226,6 +226,8 @@ A feature is complete when:
 - [ ] Edge cases handled (empty input, very long content)
 - [ ] Unit test written for any custom hook
 - [ ] All validation commands run (lint, format, build/type-check, security audit, and tests) for safety, security, and a vibe-coded codebase
+- [ ] Feature branch created, pushed, and merged/PR'd into main after all verification and security checks pass
+
 
 ---
 

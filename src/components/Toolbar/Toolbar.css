@@ -1,0 +1,51 @@
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  min-height: 40px;
+}
+
+.editor-toolbar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.editor-toolbar button:hover {
+  background-color: var(--bg-elevated);
+  border-color: var(--border);
+  color: var(--accent-blue);
+}
+
+.toolbar-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.toolbar-text {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 18px;
+  background-color: var(--border);
+  margin: 0 4px;
+}

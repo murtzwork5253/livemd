@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
+import type { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { useMarkdown } from './context/MarkdownContext';
 import { EditorPane } from './components/Editor/EditorPane';
 import { PreviewPane } from './components/Preview/PreviewPane';
+import { Toolbar } from './components/Toolbar/Toolbar';
 import { useAutosave } from './hooks/useAutosave';
 import './App.css';
 
 export default function App() {
   const { state, dispatch } = useMarkdown();
+  const editorRef = useRef<ReactCodeMirrorRef>(null);
   useAutosave('livemd-markdown', state.markdown, 1000);
   const [editorWidth, setEditorWidth] = useState(50); // percentage
   const isResizing = useRef(false);
@@ -90,7 +93,8 @@ export default function App() {
             className="pane editor-pane"
             style={{ width: state.viewMode === 'split' ? `${editorWidth}%` : '100%' }}
           >
-            <EditorPane />
+            <Toolbar editorRef={editorRef} />
+            <EditorPane editorRef={editorRef} />
           </div>
         )}
 
