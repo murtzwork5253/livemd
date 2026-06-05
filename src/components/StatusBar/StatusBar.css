@@ -1,0 +1,42 @@
+.editor-statusbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  height: 28px;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+.statusbar-left,
+.statusbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusbar-separator {
+  color: var(--border);
+  font-weight: 300;
+}
+
+.statusbar-item {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Specific monospace indicators for layout alignments */
+.statusbar-left .statusbar-item:first-child {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.statusbar-save-status {
+  font-family: var(--font-sans);
+  color: var(--accent-green);
+  font-weight: 500;
+}
