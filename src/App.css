@@ -1,0 +1,249 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem;
+  height: 48px;
+  background-color: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header h1 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.view-mode-toggle button,
+.theme-toggle button {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 4px 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+}
+
+.view-mode-toggle button:hover,
+.theme-toggle button:hover {
+  background: var(--bg-secondary);
+}
+
+.view-mode-toggle button.active {
+  background: var(--accent-blue);
+  color: #ffffff;
+  border-color: var(--accent-blue);
+}
+
+.view-mode-toggle button:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.view-mode-toggle button:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.workspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.pane {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.editor-pane {
+  background-color: var(--bg-primary);
+  overflow: hidden;
+}
+
+.preview-pane {
+  background-color: var(--bg-secondary);
+  overflow: hidden; /* Prevent double scrollbar, let preview-container scroll */
+}
+
+.pane-divider {
+  width: 4px;
+  background-color: var(--border);
+  cursor: col-resize;
+  transition: background-color 0.2s;
+  z-index: 10;
+}
+
+.pane-divider:hover,
+.pane-divider:active {
+  background-color: var(--accent-blue);
+}
+
+/* Preview Styles */
+.preview-container {
+  padding: 2rem;
+  height: 100%;
+  overflow-y: auto;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
+.preview-content {
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: var(--font-sans);
+  line-height: 1.625;
+  font-size: 1rem;
+}
+
+/* Headings */
+.preview-content h1,
+.preview-content h2,
+.preview-content h3,
+.preview-content h4,
+.preview-content h5,
+.preview-content h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.25;
+}
+
+.preview-content h1 {
+  font-size: 1.8rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3rem;
+  margin-top: 0;
+}
+
+.preview-content h2 {
+  font-size: 1.4rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3rem;
+}
+
+.preview-content h3 {
+  font-size: 1.2rem;
+}
+
+/* Paragraphs & Spacing */
+.preview-content p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+/* Lists */
+.preview-content ul,
+.preview-content ol {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.preview-content li {
+  margin-bottom: 0.25rem;
+}
+
+.preview-content li > p {
+  margin-bottom: 0;
+  margin-top: 0.25rem;
+}
+
+/* Links */
+.preview-content a {
+  color: var(--accent-blue);
+  text-decoration: none;
+}
+
+.preview-content a:hover {
+  text-decoration: underline;
+}
+
+/* Blockquotes */
+.preview-content blockquote {
+  border-left: 4px solid var(--border);
+  padding: 0.5rem 1rem;
+  color: var(--text-muted);
+  margin: 0 0 1rem 0;
+  background-color: var(--bg-elevated);
+  border-radius: 0 4px 4px 0;
+}
+
+/* Code & Preformatted */
+.preview-content code {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  background-color: var(--bg-elevated);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+.preview-content pre {
+  background-color: var(--bg-elevated);
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+}
+
+.preview-content pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.85rem;
+}
+
+/* Tables */
+.preview-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.preview-content th,
+.preview-content td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.preview-content th {
+  background-color: var(--bg-elevated);
+  font-weight: 600;
+}
+
+.preview-content tr:nth-child(even) {
+  background-color: var(--bg-secondary);
+}
+
+/* Dividers */
+.preview-content hr {
+  height: 1px;
+  border: none;
+  background-color: var(--border);
+  margin: 2rem 0;
+}
+
+/* Image styling */
+.preview-content img {
+  max-width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+/* Checkbox alignment for task lists */
+.preview-content input[type='checkbox'] {
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
