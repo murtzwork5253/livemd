@@ -30,10 +30,24 @@ export function TableOfContents() {
   }, []);
 
   const handleHeadingClick = (id: string) => {
+    const container = document.getElementById('preview-pane-container');
     const element = document.getElementById(id);
-    if (element) {
+
+    if (container && element) {
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      const scrollOffset = elementRect.top - containerRect.top + container.scrollTop - 16;
+
+      container.scrollTo({
+        top: scrollOffset,
+        behavior: 'smooth',
+      });
+
+      if (window.innerWidth < 768) {
+        setIsOpen(false);
+      }
+    } else if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // On mobile, auto-close the panel on click to avoid blocking the viewport
       if (window.innerWidth < 768) {
         setIsOpen(false);
       }
