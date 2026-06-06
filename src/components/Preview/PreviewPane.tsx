@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef } from 'react';
+import React, { createContext, useContext, useRef, memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useMarkdown } from '../../context/MarkdownContext';
@@ -62,6 +62,22 @@ const components = {
   h6: (props: React.HTMLAttributes<HTMLHeadingElement>) => <HeadingRenderer level={6} {...props} />,
 };
 
+interface MemoizedMarkdownProps {
+  content: string;
+  components: typeof components;
+}
+
+const MemoizedMarkdown = memo(
+  ({ content, components }: MemoizedMarkdownProps) => {
+    return (
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+        {content}
+      </ReactMarkdown>
+    );
+  },
+  (prevProps, nextProps) => prevProps.content === nextProps.content,
+);
+
 export function PreviewPane() {
   const { state } = useMarkdown();
   const debouncedMarkdown = useDebounce(state.markdown, 300);
@@ -73,12 +89,10 @@ export function PreviewPane() {
 
   return (
     <SlugsContext.Provider value={slugsCountRef}>
-      <TableOfContents />
+      <TableOfContents markdown={debouncedMarkdown} />
       <div className="preview-container" id="preview-pane-container">
         <div className="preview-content">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-            {debouncedMarkdown}
-          </ReactMarkdown>
+          <MemoizedMarkdown content={debouncedMarkdown} components={components} />
         </div>
       </div>
     </SlugsContext.Provider>

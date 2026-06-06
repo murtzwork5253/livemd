@@ -1,15 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
-import { useMarkdown } from '../../context/MarkdownContext';
+import { useState, useEffect, useRef, useMemo, memo } from 'react';
 import { extractHeadings } from '../../lib/markdownHelpers';
 import './TableOfContents.css';
 
-export function TableOfContents() {
-  const { state } = useMarkdown();
+interface TableOfContentsProps {
+  markdown: string;
+}
+
+export const TableOfContents = memo(function TableOfContents({ markdown }: TableOfContentsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const headings = extractHeadings(state.markdown);
+  const headings = useMemo(() => extractHeadings(markdown), [markdown]);
 
   // Close the TOC panel if the user clicks outside it
   useEffect(() => {
@@ -124,5 +126,5 @@ export function TableOfContents() {
       )}
     </div>
   );
-}
+});
 export default TableOfContents;
