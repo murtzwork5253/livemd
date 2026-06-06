@@ -207,3 +207,19 @@
 [data-theme='light'] .modal-overlay {
   background: rgba(240, 240, 240, 0.7);
 }
+
+.spinner-icon {
+  width: 20px;
+  height: 20px;
+  animation: spin 1.2s linear infinite;
+  color: var(--accent-blue);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

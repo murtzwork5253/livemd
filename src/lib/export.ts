@@ -1,6 +1,7 @@
 /**
  * Utility functions for exporting markdown content to different formats.
  */
+import html2pdf from 'html2pdf.js';
 
 /**
  * Exports raw markdown text as a downloadable file.
@@ -125,4 +126,25 @@ export function exportHTML(htmlContent: string, filename: string = 'document.htm
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Exports DOM element content as a PDF file.
+ * @param element The HTMLElement containing the rendered preview.
+ * @param filename The name of the PDF file to save (defaults to 'document.pdf').
+ * @returns A Promise that resolves when the PDF has been saved.
+ */
+export async function exportPDF(
+  element: HTMLElement,
+  filename: string = 'document.pdf',
+): Promise<void> {
+  const options = {
+    margin: [0.5, 0.5, 0.5, 0.5] as [number, number, number, number],
+    filename: filename,
+    image: { type: 'jpeg' as const, quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as const },
+  };
+
+  await html2pdf().from(element).set(options).save();
 }

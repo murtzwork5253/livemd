@@ -1,5 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { exportMarkdown, exportHTML } from '../../src/lib/export';
+import { exportMarkdown, exportHTML, exportPDF } from '../../src/lib/export';
+
+import html2pdf from 'html2pdf.js';
+
+vi.mock('html2pdf.js', () => {
+  const saveMock = vi.fn().mockResolvedValue(undefined);
+  const setMock = vi.fn();
+  const fromMock = vi.fn();
+
+  const instance = {
+    from: fromMock,
+    set: setMock,
+    save: saveMock,
+  };
+
+  fromMock.mockReturnValue(instance);
+  setMock.mockReturnValue(instance);
+
+  const html2pdfMock = vi.fn().mockReturnValue(instance);
+
+  return {
+    default: html2pdfMock,
+  };
+});
 
 describe('exportMarkdown', () => {
   beforeEach(() => {
@@ -146,5 +169,50 @@ describe('exportHTML', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createdElement = (document.createElement as any).mock.results[0].value;
     expect(createdElement.download).toBe('document.html');
+  });
+});
+
+describe('exportPDF', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should call html2pdf with the correct element, options, and trigger save', async () => {
+    const mockElement = {} as HTMLElement;
+    const filename = 'my-custom-doc.pdf';
+
+    await exportPDF(mockElement, filename);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const html2pdfMock = html2pdf as any;
+    expect(html2pdfMock).toHaveBeenCalled();
+
+    const instance = html2pdfMock.mock.results[0].value;
+    expect(instance.from).toHaveBeenCalledWith(mockElement);
+    expect(instance.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filename: filename,
+        jsPDF: expect.objectContaining({
+          format: 'letter',
+          orientation: 'portrait',
+        }),
+      })
+    );
+    expect(instance.save).toHaveBeenCalled();
+  });
+
+  it('should use default filename document.pdf when none is specified', async () => {
+    const mockElement = {} as HTMLElement;
+
+    await exportPDF(mockElement);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const html2pdfMock = html2pdf as any;
+    const instance = html2pdfMock.mock.results[0].value;
+    expect(instance.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filename: 'document.pdf',
+      })
+    );
   });
 });
