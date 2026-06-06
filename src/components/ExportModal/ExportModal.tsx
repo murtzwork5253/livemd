@@ -64,7 +64,7 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
     const originalStyle = el.getAttribute('style') || '';
     el.setAttribute(
       'style',
-      'position: fixed; top: 0; left: -9999px; width: 750px; padding: 40px; background: #ffffff; color: #1f2328; display: block;',
+      'position: fixed; top: 0; left: 0; z-index: -1000; width: 750px; padding: 40px; background: #ffffff; color: #1f2328; display: block; overflow: visible;',
     );
     el.setAttribute('data-theme', 'light');
 
