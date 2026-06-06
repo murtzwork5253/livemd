@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { exportMarkdown, exportHTML, exportPDF } from '../../lib/export';
+import { exportMarkdown, exportHTML } from '../../lib/export';
 import './ExportModal.css';
 
 interface ExportModalProps {
@@ -12,7 +12,6 @@ interface ExportModalProps {
 
 export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalProps) {
   const [filename, setFilename] = useState('document');
-  const [isExportingPDF, setIsExportingPDF] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const hiddenPreviewRef = useRef<HTMLDivElement>(null);
 
@@ -28,7 +27,7 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
 
   // Handle escape key to close modal
   useEffect(() => {
-    if (!isOpen || isExportingPDF) return;
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
@@ -36,7 +35,7 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, isExportingPDF]);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -55,26 +54,8 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
     onClose();
   };
 
-  const handleExportPDF = async () => {
-    const el = hiddenPreviewRef.current;
-    if (!el) return;
-    setIsExportingPDF(true);
-
-    try {
-      const trimmed = filename.trim() || 'document';
-      const finalFilename = trimmed.endsWith('.pdf') ? trimmed : `${trimmed}.pdf`;
-      const htmlContent = el.innerHTML || '';
-      await exportPDF(htmlContent, finalFilename);
-    } catch (err) {
-      console.error('Failed to export PDF:', err);
-    } finally {
-      setIsExportingPDF(false);
-      onClose();
-    }
-  };
-
   return (
-    <div className="modal-overlay" onClick={isExportingPDF ? undefined : onClose}>
+    <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-content"
         onClick={(e) => e.stopPropagation()}
@@ -84,12 +65,7 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
       >
         <div className="modal-header">
           <h2 id="modal-title">Export Document</h2>
-          <button
-            className="close-btn"
-            onClick={onClose}
-            aria-label="Close modal"
-            disabled={isExportingPDF}
-          >
+          <button className="close-btn" onClick={onClose} aria-label="Close modal">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -114,16 +90,11 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
               placeholder="Enter file name..."
-              disabled={isExportingPDF}
             />
           </div>
 
           <div className="export-options">
-            <button
-              className={`export-option-card ${isExportingPDF ? 'disabled' : 'active'}`}
-              onClick={isExportingPDF ? undefined : handleExportMarkdown}
-              disabled={isExportingPDF}
-            >
+            <button className="export-option-card active" onClick={handleExportMarkdown}>
               <div className="option-icon">
                 <svg
                   viewBox="0 0 24 24"
@@ -146,11 +117,7 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
               </div>
             </button>
 
-            <button
-              className={`export-option-card ${isExportingPDF ? 'disabled' : 'active'}`}
-              onClick={isExportingPDF ? undefined : handleExportHTML}
-              disabled={isExportingPDF}
-            >
+            <button className="export-option-card active" onClick={handleExportHTML}>
               <div className="option-icon">
                 <svg
                   viewBox="0 0 24 24"
@@ -172,45 +139,25 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
               </div>
             </button>
 
-            <button
-              className={`export-option-card ${isExportingPDF ? 'disabled' : 'active'}`}
-              onClick={isExportingPDF ? undefined : handleExportPDF}
-              disabled={isExportingPDF}
-            >
+            <button className="export-option-card disabled" title="PDF Export coming soon" disabled>
               <div className="option-icon">
-                {isExportingPDF ? (
-                  <svg
-                    className="spinner-icon"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  >
-                    <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="8" />
-                  </svg>
-                ) : (
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <path d="M9 15h2a2 2 0 0 0 0-4H9v8" />
-                    <path d="M13 11v8h2a4 4 0 0 0 0-8h-2z" />
-                  </svg>
-                )}
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <path d="M9 15h2a2 2 0 0 0 0-4H9v8" />
+                  <path d="M13 11v8h2a4 4 0 0 0 0-8h-2z" />
+                </svg>
               </div>
               <div className="option-details">
                 <h3>Export as PDF</h3>
-                <p>
-                  {isExportingPDF
-                    ? 'Generating PDF document...'
-                    : 'Download the print-optimized PDF (.pdf)'}
-                </p>
+                <p>Download the print-optimized PDF (.pdf) (Coming Soon)</p>
               </div>
             </button>
           </div>
