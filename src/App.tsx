@@ -7,21 +7,45 @@ import { Toolbar } from './components/Toolbar/Toolbar';
 import { useAutosave } from './hooks/useAutosave';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ExportModal } from './components/ExportModal/ExportModal';
+import { Sidebar } from './components/Sidebar/Sidebar';
+import { useDocuments } from './hooks/useDocuments';
+import { saveDocument, getDocument, getAllDocuments } from './lib/db';
 import './App.css';
 
 export default function App() {
   const { state, dispatch } = useMarkdown();
   const editorRef = useRef<ReactCodeMirrorRef>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const { loadAllDocs } = useDocuments();
 
-  const handleSave = () => {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('livemd-markdown', state.markdown);
-      dispatch({ type: 'SET_LAST_SAVED', payload: new Date() });
+  useEffect(() => {
+    loadAllDocs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSave = async () => {
+    if (state.activeDocId) {
+      try {
+        const doc = await getDocument(state.activeDocId);
+        if (doc) {
+          const updatedDoc = {
+            ...doc,
+            content: state.markdown,
+            updatedAt: new Date(),
+          };
+          await saveDocument(updatedDoc);
+          dispatch({ type: 'SET_LAST_SAVED', payload: updatedDoc.updatedAt });
+          const docs = await getAllDocuments();
+          docs.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+          dispatch({ type: 'SET_DOCUMENTS', payload: docs });
+        }
+      } catch (err) {
+        console.error('Failed to save document:', err);
+      }
     }
   };
 
-  useAutosave('livemd-markdown', state.markdown, 1000);
+  useAutosave(1000);
   useKeyboardShortcuts({ editorRef, onSave: handleSave });
   const [editorWidth, setEditorWidth] = useState(50); // percentage
   const isResizing = useRef(false);
@@ -66,6 +90,25 @@ export default function App() {
     <div className="app-container">
       <header className="app-header">
         <div className="header-left">
+          <button
+            className={`sidebar-toggle-btn ${state.sidebarOpen ? 'active' : ''}`}
+            onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
+            title={state.sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+            aria-label={state.sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="header-icon"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect width="18" height="18" x="3" y="3" rx="2" />
+              <path d="M9 3v18" />
+            </svg>
+          </button>
           <h1>LiveMD</h1>
         </div>
         <div className="view-mode-toggle" role="group" aria-label="View mode selection">
@@ -173,30 +216,36 @@ export default function App() {
         </div>
       </header>
 
-      <main className={`workspace mode-${state.viewMode}`}>
-        {state.viewMode !== 'preview' && (
-          <div
-            className="pane editor-pane"
-            style={{ width: state.viewMode === 'split' ? `${editorWidth}%` : '100%' }}
-          >
-            <Toolbar editorRef={editorRef} />
-            <EditorPane editorRef={editorRef} />
-          </div>
-        )}
+      <div className="app-body">
+        <div className={`sidebar-container ${state.sidebarOpen ? 'open' : 'collapsed'}`}>
+          <Sidebar />
+        </div>
 
-        {state.viewMode === 'split' && (
-          <div className="pane-divider" onMouseDown={handleMouseDown} title="Drag to resize" />
-        )}
+        <main className={`workspace mode-${state.viewMode}`}>
+          {state.viewMode !== 'preview' && (
+            <div
+              className="pane editor-pane"
+              style={{ width: state.viewMode === 'split' ? `${editorWidth}%` : '100%' }}
+            >
+              <Toolbar editorRef={editorRef} />
+              <EditorPane editorRef={editorRef} />
+            </div>
+          )}
 
-        {state.viewMode !== 'editor' && (
-          <div
-            className="pane preview-pane"
-            style={{ width: state.viewMode === 'split' ? `${100 - editorWidth}%` : '100%' }}
-          >
-            <PreviewPane />
-          </div>
-        )}
-      </main>
+          {state.viewMode === 'split' && (
+            <div className="pane-divider" onMouseDown={handleMouseDown} title="Drag to resize" />
+          )}
+
+          {state.viewMode !== 'editor' && (
+            <div
+              className="pane preview-pane"
+              style={{ width: state.viewMode === 'split' ? `${100 - editorWidth}%` : '100%' }}
+            >
+              <PreviewPane />
+            </div>
+          )}
+        </main>
+      </div>
 
       <ExportModal
         isOpen={isExportOpen}
