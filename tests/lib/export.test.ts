@@ -177,18 +177,19 @@ describe('exportPDF', () => {
     vi.clearAllMocks();
   });
 
-  it('should call html2pdf with the correct element, options, and trigger save', async () => {
-    const mockElement = {} as HTMLElement;
+  it('should call html2pdf with the correct HTML string, options, and trigger save', async () => {
+    const htmlContent = '<h1>Test content</h1>';
     const filename = 'my-custom-doc.pdf';
 
-    await exportPDF(mockElement, filename);
+    await exportPDF(htmlContent, filename);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const html2pdfMock = html2pdf as any;
     expect(html2pdfMock).toHaveBeenCalled();
 
     const instance = html2pdfMock.mock.results[0].value;
-    expect(instance.from).toHaveBeenCalledWith(mockElement);
+    expect(instance.from).toHaveBeenCalledWith(expect.stringContaining('<h1>Test content</h1>'));
+    expect(instance.from).toHaveBeenCalledWith(expect.stringContaining('<!DOCTYPE html>'));
     expect(instance.set).toHaveBeenCalledWith(
       expect.objectContaining({
         filename: filename,
@@ -202,9 +203,9 @@ describe('exportPDF', () => {
   });
 
   it('should use default filename document.pdf when none is specified', async () => {
-    const mockElement = {} as HTMLElement;
+    const htmlContent = '<p>plain text</p>';
 
-    await exportPDF(mockElement);
+    await exportPDF(htmlContent);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const html2pdfMock = html2pdf as any;

@@ -60,23 +60,14 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
     if (!el) return;
     setIsExportingPDF(true);
 
-    // Temporarily style the element offscreen with custom margins, typography and light theme styles
-    const originalStyle = el.getAttribute('style') || '';
-    el.setAttribute(
-      'style',
-      'position: fixed; top: 0; left: 0; z-index: -1000; width: 750px; padding: 40px; background: #ffffff; color: #1f2328; display: block; overflow: visible;',
-    );
-    el.setAttribute('data-theme', 'light');
-
     try {
       const trimmed = filename.trim() || 'document';
       const finalFilename = trimmed.endsWith('.pdf') ? trimmed : `${trimmed}.pdf`;
-      await exportPDF(el, finalFilename);
+      const htmlContent = el.innerHTML || '';
+      await exportPDF(htmlContent, finalFilename);
     } catch (err) {
       console.error('Failed to export PDF:', err);
     } finally {
-      el.setAttribute('style', originalStyle);
-      el.removeAttribute('data-theme');
       setIsExportingPDF(false);
       onClose();
     }
