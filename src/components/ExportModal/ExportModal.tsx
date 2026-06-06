@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { exportMarkdown } from '../../lib/export';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { exportMarkdown, exportHTML } from '../../lib/export';
 import './ExportModal.css';
 
 interface ExportModalProps {
@@ -11,6 +13,7 @@ interface ExportModalProps {
 export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalProps) {
   const [filename, setFilename] = useState('document');
   const inputRef = useRef<HTMLInputElement>(null);
+  const hiddenPreviewRef = useRef<HTMLDivElement>(null);
 
   // Focus the filename input when modal opens
   useEffect(() => {
@@ -40,6 +43,14 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
     const trimmed = filename.trim() || 'document';
     const finalFilename = trimmed.endsWith('.md') ? trimmed : `${trimmed}.md`;
     exportMarkdown(markdownContent, finalFilename);
+    onClose();
+  };
+
+  const handleExportHTML = () => {
+    const trimmed = filename.trim() || 'document';
+    const finalFilename = trimmed.endsWith('.html') ? trimmed : `${trimmed}.html`;
+    const htmlContent = hiddenPreviewRef.current?.innerHTML || '';
+    exportHTML(htmlContent, finalFilename);
     onClose();
   };
 
@@ -106,11 +117,7 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
               </div>
             </button>
 
-            <button
-              className="export-option-card disabled"
-              title="HTML Export coming soon"
-              disabled
-            >
+            <button className="export-option-card active" onClick={handleExportHTML}>
               <div className="option-icon">
                 <svg
                   viewBox="0 0 24 24"
@@ -128,7 +135,7 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
               </div>
               <div className="option-details">
                 <h3>Export as HTML</h3>
-                <p>Download the rendered HTML structure (.html) (Coming Soon)</p>
+                <p>Download the rendered HTML structure (.html)</p>
               </div>
             </button>
 
@@ -155,6 +162,10 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
             </button>
           </div>
         </div>
+      </div>
+
+      <div ref={hiddenPreviewRef} style={{ display: 'none' }}>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdownContent}</ReactMarkdown>
       </div>
     </div>
   );
