@@ -181,6 +181,7 @@
 .preview-pane {
   background-color: var(--bg-secondary);
   overflow: hidden; /* Prevent double scrollbar, let preview-container scroll */
+  position: relative;
 }
 
 .pane-divider {
