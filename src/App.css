@@ -493,3 +493,206 @@
     min-width: 0;
   }
 }
+
+/* Disabled States in Header */
+.view-mode-toggle.disabled,
+.export-btn.disabled,
+.export-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.view-mode-toggle.disabled button {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Empty Workspace State */
+.empty-workspace {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  background-color: var(--bg-secondary);
+  padding: 2rem;
+  text-align: center;
+}
+
+.empty-workspace-content {
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.empty-workspace-illustration {
+  color: var(--accent-blue);
+  background: rgba(88, 166, 255, 0.08);
+  padding: 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(88, 166, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(88, 166, 255, 0.05);
+  animation: float 4s ease-in-out infinite;
+}
+
+.empty-workspace-illustration svg {
+  width: 48px;
+  height: 48px;
+}
+
+.empty-workspace-content h2 {
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.empty-workspace-content p {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.52;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.create-first-doc-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  background-color: var(--accent-blue);
+  color: #0d1117; /* contrast text match */
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(88, 166, 255, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.create-first-doc-btn:hover {
+  background-color: #79b8ff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(88, 166, 255, 0.35);
+}
+
+.create-first-doc-btn:active {
+  transform: translateY(1px);
+}
+
+.create-first-doc-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.create-first-doc-btn:hover svg {
+  transform: rotate(90deg);
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Error Boundary Fallback UI */
+.preview-error-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  background-color: var(--bg-primary);
+  border: 1px dashed rgba(240, 88, 62, 0.3);
+  border-radius: 8px;
+  padding: 2rem;
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.error-fallback-content {
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.error-fallback-content .error-icon {
+  width: 44px;
+  height: 44px;
+  color: var(--accent-orange);
+  background: rgba(240, 136, 62, 0.1);
+  padding: 8px;
+  border-radius: 50%;
+}
+
+.error-fallback-content h3 {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.error-fallback-content p {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.error-details {
+  width: 100%;
+  max-height: 120px;
+  overflow-y: auto;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #f85149;
+  text-align: left;
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.error-retry-btn {
+  padding: 8px 16px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.error-retry-btn:hover {
+  background-color: var(--border);
+  color: var(--accent-blue);
+  border-color: var(--text-muted);
+}
+
+.error-retry-btn:active {
+  transform: scale(0.98);
+}

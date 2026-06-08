@@ -11,6 +11,8 @@ export function useDocuments() {
    * If the database is empty, seeds it with a default welcome document.
    */
   const loadAllDocs = async (): Promise<Document[]> => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    // await new Promise((resolve) => setTimeout(resolve, 10000));
     try {
       const docs = await getAllDocuments();
       if (docs.length === 0) {
@@ -48,6 +50,8 @@ export function useDocuments() {
     } catch (err) {
       console.error('Failed to load documents:', err);
       return [];
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
@@ -141,8 +145,11 @@ export function useDocuments() {
           });
           localStorage.setItem('livemd-active-doc-id', nextDoc.id);
         } else {
-          // If no documents are left, re-seed with default
-          await loadAllDocs();
+          dispatch({
+            type: 'SET_ACTIVE_DOC',
+            payload: { id: null, content: '' },
+          });
+          localStorage.removeItem('livemd-active-doc-id');
         }
       }
     } catch (err) {
@@ -153,6 +160,7 @@ export function useDocuments() {
   return {
     documents: state.documents,
     activeDocId: state.activeDocId,
+    isLoading: state.isLoading,
     loadAllDocs,
     createDoc,
     openDoc,

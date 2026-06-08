@@ -17,6 +17,7 @@ export type MarkdownState = {
   activeDocId: string | null;
   documents: Document[];
   lastSaved: Date | null;
+  isLoading: boolean;
 };
 
 export type MarkdownAction =
@@ -24,9 +25,10 @@ export type MarkdownAction =
   | { type: 'SET_THEME'; payload: Theme }
   | { type: 'SET_VIEW_MODE'; payload: ViewMode }
   | { type: 'TOGGLE_SIDEBAR' }
-  | { type: 'SET_ACTIVE_DOC'; payload: { id: string; content: string } }
+  | { type: 'SET_ACTIVE_DOC'; payload: { id: string | null; content: string } }
   | { type: 'SET_LAST_SAVED'; payload: Date | null }
-  | { type: 'SET_DOCUMENTS'; payload: Document[] };
+  | { type: 'SET_DOCUMENTS'; payload: Document[] }
+  | { type: 'SET_LOADING'; payload: boolean };
 
 const isBrowser = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
 
@@ -40,6 +42,7 @@ export const initialState: MarkdownState = {
   activeDocId: null,
   documents: [],
   lastSaved: null,
+  isLoading: true,
 };
 
 export function markdownReducer(state: MarkdownState, action: MarkdownAction): MarkdownState {
@@ -58,6 +61,8 @@ export function markdownReducer(state: MarkdownState, action: MarkdownAction): M
       return { ...state, lastSaved: action.payload };
     case 'SET_DOCUMENTS':
       return { ...state, documents: action.payload };
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload };
     default:
       return state;
   }

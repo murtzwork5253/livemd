@@ -17,7 +17,7 @@ export default function App() {
   const editorRef = useRef<ReactCodeMirrorRef>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
-  const { loadAllDocs } = useDocuments();
+  const { loadAllDocs, createDoc } = useDocuments();
 
   useEffect(() => {
     loadAllDocs();
@@ -112,13 +112,18 @@ export default function App() {
           </button>
           <h1>LiveMD</h1>
         </div>
-        <div className="view-mode-toggle" role="group" aria-label="View mode selection">
+        <div
+          className={`view-mode-toggle ${state.documents.length === 0 ? 'disabled' : ''}`}
+          role="group"
+          aria-label="View mode selection"
+        >
           <button
             className={state.viewMode === 'editor' ? 'active' : ''}
             onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'editor' })}
             title="Editor view"
             aria-label="Editor view"
             aria-pressed={state.viewMode === 'editor'}
+            disabled={state.documents.length === 0}
           >
             <svg
               viewBox="0 0 24 24"
@@ -139,6 +144,7 @@ export default function App() {
             title="Split view"
             aria-label="Split view"
             aria-pressed={state.viewMode === 'split'}
+            disabled={state.documents.length === 0}
           >
             <svg
               viewBox="0 0 24 24"
@@ -159,6 +165,7 @@ export default function App() {
             title="Preview view"
             aria-label="Preview view"
             aria-pressed={state.viewMode === 'preview'}
+            disabled={state.documents.length === 0}
           >
             <svg
               viewBox="0 0 24 24"
@@ -176,9 +183,10 @@ export default function App() {
         </div>
         <div className="header-right">
           <button
-            className="export-btn"
-            onClick={() => setIsExportOpen(true)}
-            title="Export Document"
+            className={`export-btn ${state.documents.length === 0 ? 'disabled' : ''}`}
+            onClick={() => state.documents.length > 0 && setIsExportOpen(true)}
+            disabled={state.documents.length === 0}
+            title={state.documents.length === 0 ? 'No document to export' : 'Export Document'}
             aria-label="Export Document"
           >
             <svg
@@ -226,44 +234,96 @@ export default function App() {
         </div>
 
         <main className={`workspace mode-${state.viewMode} mobile-tab-${mobileTab}`}>
-          <div className="mobile-tabs-header">
-            <button
-              className={`mobile-tab-btn ${mobileTab === 'editor' ? 'active' : ''}`}
-              onClick={() => setMobileTab('editor')}
-              aria-label="Editor view"
-            >
-              Write
-            </button>
-            <button
-              className={`mobile-tab-btn ${mobileTab === 'preview' ? 'active' : ''}`}
-              onClick={() => setMobileTab('preview')}
-              aria-label="Preview view"
-            >
-              Preview
-            </button>
-          </div>
-
-          {state.viewMode !== 'preview' && (
-            <div
-              className="pane editor-pane"
-              style={{ width: state.viewMode === 'split' ? `${editorWidth}%` : '100%' }}
-            >
-              <Toolbar editorRef={editorRef} />
-              <EditorPane editorRef={editorRef} />
+          {state.documents.length === 0 && !state.isLoading ? (
+            <div className="empty-workspace">
+              <div className="empty-workspace-content">
+                <div className="empty-workspace-illustration">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
+                </div>
+                <h2>Start writing in LiveMD</h2>
+                <p>
+                  Create a new document to get started. Your documents are stored securely in your
+                  browser's IndexedDB.
+                </p>
+                <button
+                  className="create-first-doc-btn"
+                  onClick={() => createDoc('Untitled Document')}
+                  aria-label="Create your first document"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Create Document
+                </button>
+              </div>
             </div>
-          )}
+          ) : (
+            <>
+              <div className="mobile-tabs-header">
+                <button
+                  className={`mobile-tab-btn ${mobileTab === 'editor' ? 'active' : ''}`}
+                  onClick={() => setMobileTab('editor')}
+                  aria-label="Editor view"
+                >
+                  Write
+                </button>
+                <button
+                  className={`mobile-tab-btn ${mobileTab === 'preview' ? 'active' : ''}`}
+                  onClick={() => setMobileTab('preview')}
+                  aria-label="Preview view"
+                >
+                  Preview
+                </button>
+              </div>
 
-          {state.viewMode === 'split' && (
-            <div className="pane-divider" onMouseDown={handleMouseDown} title="Drag to resize" />
-          )}
+              {state.viewMode !== 'preview' && (
+                <div
+                  className="pane editor-pane"
+                  style={{ width: state.viewMode === 'split' ? `${editorWidth}%` : '100%' }}
+                >
+                  <Toolbar editorRef={editorRef} />
+                  <EditorPane editorRef={editorRef} />
+                </div>
+              )}
 
-          {state.viewMode !== 'editor' && (
-            <div
-              className="pane preview-pane"
-              style={{ width: state.viewMode === 'split' ? `${100 - editorWidth}%` : '100%' }}
-            >
-              <PreviewPane />
-            </div>
+              {state.viewMode === 'split' && (
+                <div
+                  className="pane-divider"
+                  onMouseDown={handleMouseDown}
+                  title="Drag to resize"
+                />
+              )}
+
+              {state.viewMode !== 'editor' && (
+                <div
+                  className="pane preview-pane"
+                  style={{ width: state.viewMode === 'split' ? `${100 - editorWidth}%` : '100%' }}
+                >
+                  <PreviewPane />
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>

@@ -4,7 +4,8 @@ import { DocumentList } from './DocumentList';
 import './Sidebar.css';
 
 export function Sidebar() {
-  const { documents, createDoc, openDoc, renameDoc, deleteDoc, activeDocId } = useDocuments();
+  const { documents, createDoc, openDoc, renameDoc, deleteDoc, activeDocId, isLoading } =
+    useDocuments();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleCreateNew = async () => {
@@ -81,13 +82,21 @@ export function Sidebar() {
       </div>
 
       <div className="sidebar-content">
-        <DocumentList
-          documents={filteredDocs}
-          activeDocId={activeDocId}
-          onOpen={openDoc}
-          onRename={renameDoc}
-          onDelete={deleteDoc}
-        />
+        {isLoading ? (
+          <div className="sidebar-skeleton-list" aria-busy="true" aria-live="polite">
+            <div className="sidebar-skeleton-item pulsing" />
+            <div className="sidebar-skeleton-item pulsing" />
+            <div className="sidebar-skeleton-item pulsing" />
+          </div>
+        ) : (
+          <DocumentList
+            documents={filteredDocs}
+            activeDocId={activeDocId}
+            onOpen={openDoc}
+            onRename={renameDoc}
+            onDelete={deleteDoc}
+          />
+        )}
       </div>
     </aside>
   );

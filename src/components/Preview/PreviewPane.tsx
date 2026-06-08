@@ -5,6 +5,7 @@ import { useMarkdown } from '../../context/MarkdownContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { slugify } from '../../lib/markdownHelpers';
 import { TableOfContents } from '../TableOfContents/TableOfContents';
+import ErrorBoundary from './ErrorBoundary';
 
 function getTextFromChildren(children: React.ReactNode): string {
   if (!children) return '';
@@ -119,6 +120,10 @@ interface MemoizedMarkdownProps {
 
 const MemoizedMarkdown = memo(
   ({ content, components }: MemoizedMarkdownProps) => {
+    // Add this simulation check:
+    if (content.includes('trigger-crash')) {
+      throw new Error('Simulated Markdown Preview Crash!');
+    }
     return (
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {content}
@@ -137,7 +142,9 @@ export function PreviewPane() {
       <TableOfContents markdown={debouncedMarkdown} />
       <div className="preview-container" id="preview-pane-container">
         <div className="preview-content">
-          <MemoizedMarkdown content={debouncedMarkdown} components={components} />
+          <ErrorBoundary resetKey={debouncedMarkdown}>
+            <MemoizedMarkdown content={debouncedMarkdown} components={components} />
+          </ErrorBoundary>
         </div>
       </div>
     </>
