@@ -1,12 +1,10 @@
-import React, { createContext, useContext, useRef, memo } from 'react';
+import React, { memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useMarkdown } from '../../context/MarkdownContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { slugify } from '../../lib/markdownHelpers';
 import { TableOfContents } from '../TableOfContents/TableOfContents';
-
-const SlugsContext = createContext<React.MutableRefObject<Record<string, number>> | null>(null);
 
 function getTextFromChildren(children: React.ReactNode): string {
   if (!children) return '';
@@ -31,20 +29,8 @@ interface HeadingRendererProps extends React.HTMLAttributes<HTMLHeadingElement> 
 
 const HeadingRenderer = ({ level, children, ...props }: HeadingRendererProps) => {
   const text = getTextFromChildren(children);
-  let slug = slugify(text);
-  const slugsContext = useContext(SlugsContext);
-
-  if (slugsContext) {
-    const slugsCount = slugsContext.current;
-    if (slugsCount[slug] !== undefined) {
-      // eslint-disable-next-line react-hooks/immutability
-      slugsCount[slug]++;
-      slug = `${slug}-${slugsCount[slug]}`;
-    } else {
-      // eslint-disable-next-line react-hooks/immutability
-      slugsCount[slug] = 0;
-    }
-  }
+  const slug = slugify(text);
+  console.log(`HeadingRenderer h${level} text: "${text}" -> ID: "${slug}"`);
 
   // Remove node prop from HTML element attributes to avoid React warnings
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -60,6 +46,70 @@ const components = {
   h4: (props: React.HTMLAttributes<HTMLHeadingElement>) => <HeadingRenderer level={4} {...props} />,
   h5: (props: React.HTMLAttributes<HTMLHeadingElement>) => <HeadingRenderer level={5} {...props} />,
   h6: (props: React.HTMLAttributes<HTMLHeadingElement>) => <HeadingRenderer level={6} {...props} />,
+  a: ({
+    href,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { node?: unknown }) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { node, ...rest } = props;
+    if (href && href.startsWith('#')) {
+      const handleHashClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        console.log('PreviewPane handleHashClick called with href:', href);
+        e.preventDefault();
+        const id = decodeURIComponent(href.slice(1));
+        const container = document.getElementById('preview-pane-container');
+        let element = document.getElementById(id);
+        console.log('PreviewPane container:', !!container, 'initial element by ID:', !!element);
+
+        if (!element && container) {
+          const normalizedTarget = id.toLowerCase().replace(/[^a-z0-9]/g, '');
+          console.log('Fuzzy matching. Normalized target ID:', normalizedTarget);
+          const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6');
+          for (const heading of Array.from(headings)) {
+            const headingId = heading.getAttribute('id') || '';
+            const normalizedHeading = headingId.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (normalizedHeading === normalizedTarget) {
+              element = heading as HTMLElement;
+              break;
+            }
+          }
+          console.log('Fuzzy matched element found:', !!element);
+        }
+
+        if (container && element) {
+          const containerRect = container.getBoundingClientRect();
+          const elementRect = element.getBoundingClientRect();
+          const scrollOffset = elementRect.top - containerRect.top + container.scrollTop - 16;
+          console.log('Scrolling container to offset:', scrollOffset);
+
+          container.scrollTo({
+            top: scrollOffset,
+            behavior: 'smooth',
+          });
+        } else if (element) {
+          console.log('Container not found, scrolling element directly');
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          console.warn('Target heading element not found for id:', id);
+        }
+
+        window.history.pushState(null, '', href);
+      };
+
+      return (
+        <a href={href} onClick={handleHashClick} {...rest}>
+          {children}
+        </a>
+      );
+    }
+
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" {...rest}>
+        {children}
+      </a>
+    );
+  },
 };
 
 interface MemoizedMarkdownProps {
@@ -81,21 +131,16 @@ const MemoizedMarkdown = memo(
 export function PreviewPane() {
   const { state } = useMarkdown();
   const debouncedMarkdown = useDebounce(state.markdown, 300);
-  const slugsCountRef = useRef<Record<string, number>>({});
-
-  // Reset the count for this render pass
-  // eslint-disable-next-line react-hooks/refs
-  slugsCountRef.current = {};
 
   return (
-    <SlugsContext.Provider value={slugsCountRef}>
+    <>
       <TableOfContents markdown={debouncedMarkdown} />
       <div className="preview-container" id="preview-pane-container">
         <div className="preview-content">
           <MemoizedMarkdown content={debouncedMarkdown} components={components} />
         </div>
       </div>
-    </SlugsContext.Provider>
+    </>
   );
 }
 export default PreviewPane;

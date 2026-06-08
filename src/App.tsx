@@ -16,6 +16,7 @@ export default function App() {
   const { state, dispatch } = useMarkdown();
   const editorRef = useRef<ReactCodeMirrorRef>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const { loadAllDocs } = useDocuments();
 
   useEffect(() => {
@@ -217,11 +218,31 @@ export default function App() {
       </header>
 
       <div className="app-body">
+        {state.sidebarOpen && (
+          <div className="sidebar-backdrop" onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })} />
+        )}
         <div className={`sidebar-container ${state.sidebarOpen ? 'open' : 'collapsed'}`}>
           <Sidebar />
         </div>
 
-        <main className={`workspace mode-${state.viewMode}`}>
+        <main className={`workspace mode-${state.viewMode} mobile-tab-${mobileTab}`}>
+          <div className="mobile-tabs-header">
+            <button
+              className={`mobile-tab-btn ${mobileTab === 'editor' ? 'active' : ''}`}
+              onClick={() => setMobileTab('editor')}
+              aria-label="Editor view"
+            >
+              Write
+            </button>
+            <button
+              className={`mobile-tab-btn ${mobileTab === 'preview' ? 'active' : ''}`}
+              onClick={() => setMobileTab('preview')}
+              aria-label="Preview view"
+            >
+              Preview
+            </button>
+          </div>
+
           {state.viewMode !== 'preview' && (
             <div
               className="pane editor-pane"

@@ -16,7 +16,7 @@ export function EditorPane({ editorRef }: EditorPaneProps) {
   return (
     <div
       className="editor-container"
-      style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}
+      style={{ flex: 1, minHeight: 0, width: '100%', display: 'flex', flexDirection: 'column' }}
     >
       <CodeMirror
         ref={editorRef}
@@ -28,9 +28,13 @@ export function EditorPane({ editorRef }: EditorPaneProps) {
         onUpdate={(update) => {
           const pos = update.state.selection.main.head;
           const line = update.state.doc.lineAt(pos);
-          setCursor({
-            line: line.number,
-            col: pos - line.from + 1,
+          const newLine = line.number;
+          const newCol = pos - line.from + 1;
+          setCursor((prev) => {
+            if (prev.line === newLine && prev.col === newCol) {
+              return prev;
+            }
+            return { line: newLine, col: newCol };
           });
         }}
         style={{ flex: 1, overflow: 'hidden' }}

@@ -69,6 +69,11 @@ export function useDocuments() {
       dispatch({ type: 'SET_DOCUMENTS', payload: docs });
       dispatch({ type: 'SET_ACTIVE_DOC', payload: { id: newDoc.id, content: newDoc.content } });
       localStorage.setItem('livemd-active-doc-id', newDoc.id);
+
+      // Auto-collapse sidebar on mobile screen size
+      if (window.innerWidth < 768 && state.sidebarOpen) {
+        dispatch({ type: 'TOGGLE_SIDEBAR' });
+      }
     } catch (err) {
       console.error('Failed to create document:', err);
     }
@@ -84,6 +89,11 @@ export function useDocuments() {
       if (doc) {
         dispatch({ type: 'SET_ACTIVE_DOC', payload: { id: doc.id, content: doc.content } });
         localStorage.setItem('livemd-active-doc-id', doc.id);
+
+        // Auto-collapse sidebar on mobile screen size
+        if (window.innerWidth < 768 && state.sidebarOpen) {
+          dispatch({ type: 'TOGGLE_SIDEBAR' });
+        }
       }
     } catch (err) {
       console.error('Failed to open document:', err);

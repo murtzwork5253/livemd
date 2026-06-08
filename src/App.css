@@ -358,3 +358,138 @@
   margin-right: 0.5rem;
   vertical-align: middle;
 }
+
+/* Mobile Tab Switcher Segmented Control */
+.mobile-tabs-header {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .mobile-tabs-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .mobile-tab-btn {
+    flex: 1;
+    max-width: 160px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-primary);
+    color: var(--text-muted);
+    border-radius: 6px;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    outline: none;
+  }
+
+  .mobile-tab-btn:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-elevated);
+  }
+
+  .mobile-tab-btn.active {
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: var(--bg-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  /* View mode toggle hidden in header on mobile */
+  .view-mode-toggle {
+    display: none !important;
+  }
+
+  /* Resizer hidden on mobile */
+  .pane-divider {
+    display: none !important;
+  }
+
+  /* Force vertical workspace stacking with full-width panes */
+  .workspace {
+    flex-direction: column !important;
+  }
+
+  .editor-pane,
+  .preview-pane {
+    width: 100% !important;
+    flex: 1;
+  }
+
+  /* Toggle display based on selected mobile tab */
+  .workspace.mobile-tab-editor .preview-pane {
+    display: none !important;
+  }
+
+  .workspace.mobile-tab-preview .editor-pane {
+    display: none !important;
+  }
+
+  /* Sidebar Drawer on Mobile */
+  .sidebar-container {
+    position: absolute !important;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: 100%;
+    width: 280px !important;
+    min-width: 280px !important;
+    z-index: 1000;
+    transform: translateX(0);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 8px 0 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .sidebar-container.collapsed {
+    transform: translateX(-100%) !important;
+    width: 280px !important;
+    min-width: 280px !important;
+    border-right: none !important;
+  }
+
+  /* Sidebar Backdrop overlay on mobile */
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    top: 48px; /* below header */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(3px);
+    z-index: 999;
+    animation: fadeInBackdrop 0.2s ease-out;
+  }
+}
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Intermediate Tablet Breakpoint: 768px to 1024px */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Ensure split layout works with collapsing sidebar */
+  .sidebar-container {
+    width: 240px;
+    min-width: 240px;
+  }
+  .sidebar-container.collapsed {
+    width: 0;
+    min-width: 0;
+  }
+}
