@@ -25,4 +25,20 @@ describe('markdownReducer', () => {
     const state = markdownReducer({ ...initialState, sidebarOpen: true }, action);
     expect(state.sidebarOpen).toBe(false);
   });
+
+  it('should handle SET_SNAPSHOTS', () => {
+    const snapshots = [
+      {
+        id: 'snap-1',
+        docId: 'doc-1',
+        content: '# Snap content',
+        label: 'Manual Save',
+        createdAt: new Date(),
+        wordCount: 2,
+      },
+    ];
+    const action: MarkdownAction = { type: 'SET_SNAPSHOTS', payload: snapshots };
+    const state = markdownReducer(initialState, action);
+    expect(state.snapshots).toEqual(snapshots);
+  });
 });

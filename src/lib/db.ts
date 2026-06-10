@@ -1,14 +1,7 @@
 import { openDB, type IDBPDatabase } from 'idb';
-import type { Document } from '../context/markdownReducer';
+import type { Document, Snapshot } from '../context/markdownReducer';
 
-export interface Snapshot {
-  id: string;
-  docId: string;
-  content: string;
-  label: string; // "Auto-save" or "Manual save"
-  createdAt: Date | string;
-  wordCount: number;
-}
+export type { Snapshot };
 
 const DB_NAME = 'livemd';
 const DB_VERSION = 2;

@@ -20,7 +20,7 @@ export function HistoryPanel({
   onSnapshotRestored,
 }: HistoryPanelProps) {
   const { state, dispatch } = useMarkdown();
-  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+  const { snapshots } = state;
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
@@ -43,21 +43,21 @@ export function HistoryPanel({
       getSnapshotsForDoc(activeDocId).then((snaps) => {
         if (active) {
           snaps.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          setSnapshots(snaps);
+          dispatch({ type: 'SET_SNAPSHOTS', payload: snaps });
         }
       });
     } else {
       // Defer state update to avoid warnings about synchronous setState in effect callback
       Promise.resolve().then(() => {
         if (active) {
-          setSnapshots([]);
+          dispatch({ type: 'SET_SNAPSHOTS', payload: [] });
         }
       });
     }
     return () => {
       active = false;
     };
-  }, [activeDocId, isOpen]);
+  }, [activeDocId, isOpen, dispatch]);
 
   const handleRestore = (snapshot: Snapshot) => {
     setConfirmState({
@@ -88,7 +88,8 @@ export function HistoryPanel({
       onConfirm: async () => {
         try {
           await deleteSnapshot(id);
-          setSnapshots((prev) => prev.filter((snap) => snap.id !== id));
+          const updatedSnaps = snapshots.filter((snap) => snap.id !== id);
+          dispatch({ type: 'SET_SNAPSHOTS', payload: updatedSnaps });
           if (expandedId === id) {
             setExpandedId(null);
           }

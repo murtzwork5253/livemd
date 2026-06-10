@@ -1,12 +1,12 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { saveSnapshot, pruneSnapshots, type Snapshot } from '../lib/db';
+import { saveSnapshot, pruneSnapshots, getSnapshotsForDoc, type Snapshot } from '../lib/db';
 import { nanoid } from 'nanoid';
 import { useMarkdown } from '../context/MarkdownContext';
 
 const SNAPSHOT_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 export function useVersionHistory() {
-  const { state } = useMarkdown();
+  const { state, dispatch } = useMarkdown();
   const { activeDocId, markdown } = state;
 
   // Cache the last snapshot content per document ID to avoid duplicate writes
@@ -34,11 +34,15 @@ export function useVersionHistory() {
         await saveSnapshot(newSnapshot);
         await pruneSnapshots(activeDocId, 50);
         lastSnapshotContentRef.current[activeDocId] = markdown;
+
+        const snaps = await getSnapshotsForDoc(activeDocId);
+        snaps.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        dispatch({ type: 'SET_SNAPSHOTS', payload: snaps });
       } catch (err) {
         console.error('Failed to save snapshot:', err);
       }
     },
-    [activeDocId, markdown],
+    [activeDocId, markdown, dispatch],
   );
 
   // Cache the initial content when document loads so auto-save snapshot is not triggered immediately
