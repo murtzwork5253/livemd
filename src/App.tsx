@@ -55,7 +55,7 @@ export default function App() {
           };
           await saveDocument(updatedDoc);
           dispatch({ type: 'SET_LAST_SAVED', payload: updatedDoc.updatedAt });
-          
+
           // Save manual snapshot on manual save trigger
           await createSnapshot('Manual Save');
 
@@ -230,9 +230,17 @@ export default function App() {
         <div className="header-right">
           <button
             className={`share-btn ${state.documents.length === 0 || state.isSharedView ? 'disabled' : ''}`}
-            onClick={() => !state.isSharedView && state.documents.length > 0 && setIsShareOpen(true)}
+            onClick={() =>
+              !state.isSharedView && state.documents.length > 0 && setIsShareOpen(true)
+            }
             disabled={state.documents.length === 0 || state.isSharedView}
-            title={state.isSharedView ? 'Cannot share a shared link' : state.documents.length === 0 ? 'No document to share' : 'Share Document'}
+            title={
+              state.isSharedView
+                ? 'Cannot share a shared link'
+                : state.documents.length === 0
+                  ? 'No document to share'
+                  : 'Share Document'
+            }
             aria-label="Share Document"
           >
             <svg
@@ -317,7 +325,8 @@ export default function App() {
       {state.isSharedView && (
         <div className="shared-banner" role="status">
           <span>
-            You are viewing a shared document. Click <strong>Edit Copy</strong> to save a personal copy.
+            You are viewing a shared document. Click <strong>Edit Copy</strong> to save a personal
+            copy.
           </span>
           <div className="shared-banner-actions">
             <button className="banner-action-btn edit" onClick={handleCreatePersonalCopy}>

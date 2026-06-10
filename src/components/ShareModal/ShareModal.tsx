@@ -84,11 +84,11 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
     try {
       const response = await fetch(
         `https://api.allorigins.win/get?url=${encodeURIComponent(
-          `https://is.gd/create.php?format=json&url=${encodeURIComponent(url)}`
-        )}`
+          `https://is.gd/create.php?format=json&url=${encodeURIComponent(url)}`,
+        )}`,
       );
       if (!response.ok) throw new Error('Shortening service is temporarily unavailable.');
-      
+
       const data = await response.json();
       if (!data.contents) {
         throw new Error('Shortening service returned empty contents.');
@@ -120,7 +120,8 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
     }
   };
 
-  const isLocalhost = typeof window !== 'undefined' && 
+  const isLocalhost =
+    typeof window !== 'undefined' &&
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   return (
@@ -169,16 +170,19 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
               </svg>
               <h3>Document is too large</h3>
               <p>
-                This document is {sizeKB}KB, which exceeds the maximum recommended share link size of 8.0KB.
+                This document is {sizeKB}KB, which exceeds the maximum recommended share link size
+                of 8.0KB.
               </p>
               <p className="secondary-warning">
-                Please reduce the document content size, or use the <strong>Export</strong> feature in the top toolbar to download it as a file.
+                Please reduce the document content size, or use the <strong>Export</strong> feature
+                in the top toolbar to download it as a file.
               </p>
             </div>
           ) : (
             <div className="share-success-content">
               <p className="share-instruction">
-                Copy the link below. Anyone with this link can view a read-only preview of this document.
+                Copy the link below. Anyone with this link can view a read-only preview of this
+                document.
               </p>
               <div className="share-input-wrapper">
                 <input
@@ -200,7 +204,16 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
               </div>
 
               {shortenError && (
-                <p className="share-error-text" style={{ color: 'var(--accent-orange)', fontSize: '0.75rem', marginTop: '-0.75rem', marginBottom: '0.75rem', fontFamily: 'var(--font-sans)' }}>
+                <p
+                  className="share-error-text"
+                  style={{
+                    color: 'var(--accent-orange)',
+                    fontSize: '0.75rem',
+                    marginTop: '-0.75rem',
+                    marginBottom: '0.75rem',
+                    fontFamily: 'var(--font-sans)',
+                  }}
+                >
                   ⚠️ {shortenError}
                 </p>
               )}
@@ -210,15 +223,34 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
                   className="share-shorten-btn"
                   onClick={handleShorten}
                   disabled={isShortening || isLocalhost}
-                  title={isLocalhost ? "Public shorteners cannot redirect to localhost" : "⚡ Generate Short URL"}
+                  title={
+                    isLocalhost
+                      ? 'Public shorteners cannot redirect to localhost'
+                      : '⚡ Generate Short URL'
+                  }
                 >
-                  {isShortening ? 'Shortening link...' : isLocalhost ? '⚡ Shortening requires public domain' : '⚡ Generate Short URL'}
+                  {isShortening
+                    ? 'Shortening link...'
+                    : isLocalhost
+                      ? '⚡ Shortening requires public domain'
+                      : '⚡ Generate Short URL'}
                 </button>
               )}
 
               {isLocalhost && (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '-0.75rem', marginBottom: '1.25rem', textAlign: 'center', fontFamily: 'var(--font-sans)', lineHeight: '1.4' }}>
-                  ℹ️ Public URL shorteners cannot redirect to local environments (`localhost`). URL shortening will be fully active once this app is deployed to a public domain.
+                <p
+                  style={{
+                    color: 'var(--text-muted)',
+                    fontSize: '0.75rem',
+                    marginTop: '-0.75rem',
+                    marginBottom: '1.25rem',
+                    textAlign: 'center',
+                    fontFamily: 'var(--font-sans)',
+                    lineHeight: '1.4',
+                  }}
+                >
+                  ℹ️ Public URL shorteners cannot redirect to local environments (`localhost`). URL
+                  shortening will be fully active once this app is deployed to a public domain.
                 </p>
               )}
 

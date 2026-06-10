@@ -69,17 +69,14 @@ export function ConfirmModal({
             <button className="confirm-action-btn cancel" onClick={onCancel}>
               {cancelLabel}
             </button>
-            <button
-              className={`confirm-action-btn confirm ${variant}`}
-              onClick={onConfirm}
-            >
+            <button className={`confirm-action-btn confirm ${variant}`} onClick={onConfirm}>
               {confirmLabel}
             </button>
           </div>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 

@@ -116,10 +116,10 @@ export async function pruneSnapshots(docId: string, keep = 50): Promise<void> {
   const tx = db.transaction(SNAPSHOTS_STORE_NAME, 'readwrite');
   const index = tx.store.index('docId');
   const all = await index.getAll(docId);
-  
+
   // Sort descending: newest first
   all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  
+
   if (all.length > keep) {
     const toDelete = all.slice(keep);
     await Promise.all(toDelete.map((s) => tx.store.delete(s.id)));

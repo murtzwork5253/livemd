@@ -63,7 +63,8 @@ export function HistoryPanel({
     setConfirmState({
       isOpen: true,
       title: 'Restore Version',
-      message: 'Are you sure you want to restore this version? Your current edits will be saved as a snapshot.',
+      message:
+        'Are you sure you want to restore this version? Your current edits will be saved as a snapshot.',
       confirmLabel: 'Restore',
       variant: 'info',
       onConfirm: () => {
@@ -80,7 +81,8 @@ export function HistoryPanel({
     setConfirmState({
       isOpen: true,
       title: 'Delete Snapshot',
-      message: 'Are you sure you want to delete this version history snapshot? This action cannot be undone.',
+      message:
+        'Are you sure you want to delete this version history snapshot? This action cannot be undone.',
       confirmLabel: 'Delete',
       variant: 'danger',
       onConfirm: async () => {
@@ -142,7 +144,10 @@ export function HistoryPanel({
               <polyline points="12 6 12 12 16 14" />
             </svg>
             <p>No snapshots recorded yet.</p>
-            <p className="subtitle">Snapshots are saved automatically every 5 minutes during edits, and manually on save (Ctrl+S).</p>
+            <p className="subtitle">
+              Snapshots are saved automatically every 5 minutes during edits, and manually on save
+              (Ctrl+S).
+            </p>
           </div>
         ) : (
           <ul className="snapshot-list">
@@ -202,18 +207,22 @@ export function HistoryPanel({
                           {computeDiff(snap.content, state.markdown).map((line, index) => (
                             <div key={index} className={`diff-line ${line.type}`}>
                               <span className="diff-indicator">
-                                {line.type === 'added' ? '+' : line.type === 'removed' ? '-' : line.type === 'modified' ? '✎' : ' '}
+                                {line.type === 'added'
+                                  ? '+'
+                                  : line.type === 'removed'
+                                    ? '-'
+                                    : line.type === 'modified'
+                                      ? '✎'
+                                      : ' '}
                               </span>
                               <span className="diff-text">
-                                {line.type === 'modified' && line.words ? (
-                                  line.words.map((word, wIdx) => (
-                                    <span key={wIdx} className={`diff-word ${word.type}`}>
-                                      {word.text}
-                                    </span>
-                                  ))
-                                ) : (
-                                  line.text || ' '
-                                )}
+                                {line.type === 'modified' && line.words
+                                  ? line.words.map((word, wIdx) => (
+                                      <span key={wIdx} className={`diff-word ${word.type}`}>
+                                        {word.text}
+                                      </span>
+                                    ))
+                                  : line.text || ' '}
                               </span>
                             </div>
                           ))}

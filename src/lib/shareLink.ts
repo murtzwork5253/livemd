@@ -27,7 +27,9 @@ export async function encodeDocument(content: string, title: string): Promise<st
 /**
  * Decodes a Base64 string back to its original document payload (supports both compressed and legacy uncompressed).
  */
-export async function decodeDocument(encoded: string): Promise<{ content: string; title: string } | null> {
+export async function decodeDocument(
+  encoded: string,
+): Promise<{ content: string; title: string } | null> {
   try {
     if (encoded.startsWith('v2:')) {
       const cleanEncoded = encoded.slice(3);
@@ -40,7 +42,7 @@ export async function decodeDocument(encoded: string): Promise<{ content: string
       const decompressedStream = stream.pipeThrough(new DecompressionStream('gzip'));
       const payloadStr = await new Response(decompressedStream).text();
       const parsed = JSON.parse(payloadStr);
-      
+
       if (parsed && typeof parsed.content === 'string' && typeof parsed.title === 'string') {
         return { content: parsed.content, title: parsed.title };
       }
@@ -51,7 +53,7 @@ export async function decodeDocument(encoded: string): Promise<{ content: string
       const bytes = new Uint8Array(binaryString.split('').map((char) => char.charCodeAt(0)));
       const payloadStr = new TextDecoder().decode(bytes);
       const parsed = JSON.parse(payloadStr);
-      
+
       if (parsed && typeof parsed.content === 'string' && typeof parsed.title === 'string') {
         return { content: parsed.content, title: parsed.title };
       }

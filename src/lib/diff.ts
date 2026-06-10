@@ -18,7 +18,7 @@ export function computeWordDiff(oldLine: string, newLine: string): DiffWord[] {
   const oldWords = oldLine.match(regex) || [];
   const newWords = newLine.match(regex) || [];
   const wordDiff: DiffWord[] = [];
-  
+
   let o = 0;
   let n = 0;
   const lookAheadLimit = 5;
@@ -31,7 +31,7 @@ export function computeWordDiff(oldLine: string, newLine: string): DiffWord[] {
         n++;
       } else {
         let foundMatch = false;
-        
+
         for (let i = 1; i <= lookAheadLimit; i++) {
           // Check for word additions
           if (n + i < newWords.length && oldWords[o] === newWords[n + i]) {
@@ -52,7 +52,7 @@ export function computeWordDiff(oldLine: string, newLine: string): DiffWord[] {
             break;
           }
         }
-        
+
         if (!foundMatch) {
           wordDiff.push({ type: 'removed', text: oldWords[o] });
           wordDiff.push({ type: 'added', text: newWords[n] });
@@ -68,7 +68,7 @@ export function computeWordDiff(oldLine: string, newLine: string): DiffWord[] {
       n++;
     }
   }
-  
+
   return wordDiff;
 }
 
@@ -81,7 +81,7 @@ export function computeDiff(oldText: string, newText: string): DiffLine[] {
   const oldLines = oldText.split('\n');
   const newLines = newText.split('\n');
   const diff: DiffLine[] = [];
-  
+
   let o = 0;
   let n = 0;
   const lookAheadLimit = 5;
@@ -95,7 +95,7 @@ export function computeDiff(oldText: string, newText: string): DiffLine[] {
       } else {
         // Look ahead to find matches
         let foundMatch = false;
-        
+
         for (let i = 1; i <= lookAheadLimit; i++) {
           // Check for line additions in newText (insertion lookahead)
           if (n + i < newLines.length && oldLines[o] === newLines[n + i]) {
@@ -116,7 +116,7 @@ export function computeDiff(oldText: string, newText: string): DiffLine[] {
             break;
           }
         }
-        
+
         if (!foundMatch) {
           // If no matches found in window, replace/modify old line with new line
           const words = computeWordDiff(oldLines[o], newLines[n]);
@@ -137,6 +137,6 @@ export function computeDiff(oldText: string, newText: string): DiffLine[] {
       n++;
     }
   }
-  
+
   return diff;
 }
