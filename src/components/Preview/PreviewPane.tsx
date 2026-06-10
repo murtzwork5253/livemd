@@ -31,7 +31,7 @@ interface HeadingRendererProps extends React.HTMLAttributes<HTMLHeadingElement> 
 const HeadingRenderer = ({ level, children, ...props }: HeadingRendererProps) => {
   const text = getTextFromChildren(children);
   const slug = slugify(text);
-  console.log(`HeadingRenderer h${level} text: "${text}" -> ID: "${slug}"`);
+  //(`HeadingRenderer h${level} text: "${text}" -> ID: "${slug}"`);
 
   // Remove node prop from HTML element attributes to avoid React warnings
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -56,16 +56,16 @@ const components = {
     const { node, ...rest } = props;
     if (href && href.startsWith('#')) {
       const handleHashClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-        console.log('PreviewPane handleHashClick called with href:', href);
+        //('PreviewPane handleHashClick called with href:', href);
         e.preventDefault();
         const id = decodeURIComponent(href.slice(1));
         const container = document.getElementById('preview-pane-container');
         let element = document.getElementById(id);
-        console.log('PreviewPane container:', !!container, 'initial element by ID:', !!element);
+        //('PreviewPane container:', !!container, 'initial element by ID:', !!element);
 
         if (!element && container) {
           const normalizedTarget = id.toLowerCase().replace(/[^a-z0-9]/g, '');
-          console.log('Fuzzy matching. Normalized target ID:', normalizedTarget);
+          //('Fuzzy matching. Normalized target ID:', normalizedTarget);
           const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6');
           for (const heading of Array.from(headings)) {
             const headingId = heading.getAttribute('id') || '';
@@ -75,21 +75,21 @@ const components = {
               break;
             }
           }
-          console.log('Fuzzy matched element found:', !!element);
+          //('Fuzzy matched element found:', !!element);
         }
 
         if (container && element) {
           const containerRect = container.getBoundingClientRect();
           const elementRect = element.getBoundingClientRect();
           const scrollOffset = elementRect.top - containerRect.top + container.scrollTop - 16;
-          console.log('Scrolling container to offset:', scrollOffset);
+          //('Scrolling container to offset:', scrollOffset);
 
           container.scrollTo({
             top: scrollOffset,
             behavior: 'smooth',
           });
         } else if (element) {
-          console.log('Container not found, scrolling element directly');
+          //('Container not found, scrolling element directly');
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else {
           console.warn('Target heading element not found for id:', id);

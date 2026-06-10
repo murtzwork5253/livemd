@@ -38,7 +38,7 @@ describe('db operations', () => {
 
   it('should initialize the database with correct store name and parameters', async () => {
     await dbPromise;
-    expect(openDB).toHaveBeenCalledWith('livemd', 1, expect.any(Object));
+    expect(openDB).toHaveBeenCalledWith('livemd', 2, expect.any(Object));
   });
 
   it('should save/put a document in IndexedDB', async () => {

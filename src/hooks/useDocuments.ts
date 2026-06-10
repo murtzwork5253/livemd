@@ -58,11 +58,14 @@ export function useDocuments() {
   /**
    * Creates a new blank document, saves it in IndexedDB, and opens it.
    */
-  const createDoc = async (title: string = 'Untitled Document'): Promise<Document> => {
+  const createDoc = async (
+    title: string = 'Untitled Document',
+    initialContent?: string,
+  ): Promise<Document> => {
     const newDoc: Document = {
       id: nanoid(),
       title,
-      content: `# ${title}\n\nStart writing...`,
+      content: initialContent !== undefined ? initialContent : `# ${title}\n\nStart writing...`,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

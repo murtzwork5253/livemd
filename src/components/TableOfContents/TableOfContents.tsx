@@ -32,14 +32,14 @@ export const TableOfContents = memo(function TableOfContents({ markdown }: Table
   }, []);
 
   const handleHeadingClick = (id: string) => {
-    console.log('TableOfContents handleHeadingClick called with id:', id);
+    //('TableOfContents handleHeadingClick called with id:', id);
     const container = document.getElementById('preview-pane-container');
     let element = document.getElementById(id);
-    console.log('TableOfContents container:', !!container, 'initial element by ID:', !!element);
+    //('TableOfContents container:', !!container, 'initial element by ID:', !!element);
 
     if (!element && container) {
       const normalizedTarget = id.toLowerCase().replace(/[^a-z0-9]/g, '');
-      console.log('Fuzzy matching. Normalized target ID:', normalizedTarget);
+      //('Fuzzy matching. Normalized target ID:', normalizedTarget);
       const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6');
       for (const heading of Array.from(headings)) {
         const headingId = heading.getAttribute('id') || '';
@@ -49,14 +49,14 @@ export const TableOfContents = memo(function TableOfContents({ markdown }: Table
           break;
         }
       }
-      console.log('Fuzzy matched element found:', !!element);
+      //('Fuzzy matched element found:', !!element);
     }
 
     if (container && element) {
       const containerRect = container.getBoundingClientRect();
       const elementRect = element.getBoundingClientRect();
       const scrollOffset = elementRect.top - containerRect.top + container.scrollTop - 16;
-      console.log('Scrolling container to offset:', scrollOffset);
+      //('Scrolling container to offset:', scrollOffset);
 
       container.scrollTo({
         top: scrollOffset,
@@ -67,7 +67,7 @@ export const TableOfContents = memo(function TableOfContents({ markdown }: Table
         setIsOpen(false);
       }
     } else if (element) {
-      console.log('Container not found, scrolling element directly');
+      //('Container not found, scrolling element directly');
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       if (window.innerWidth < 768) {
         setIsOpen(false);

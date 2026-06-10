@@ -1,0 +1,139 @@
+.share-instruction {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin: 0 0 1.25rem 0;
+}
+
+.share-input-wrapper {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 1.25rem;
+}
+
+.share-url-input {
+  flex: 1;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  outline: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-copy-btn {
+  background-color: var(--accent-blue);
+  color: #0d1117;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.25rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 80px;
+}
+
+.share-copy-btn:hover {
+  background-color: #79b8ff;
+}
+
+.share-copy-btn.copied {
+  background-color: var(--accent-green) !important;
+  color: #0d1117;
+}
+
+.share-status-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.secure-badge {
+  color: var(--accent-green);
+  font-weight: 500;
+}
+
+/* Warnings layout */
+.share-warning {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem 0;
+  gap: 0.75rem;
+}
+
+.warning-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--accent-orange);
+  background: rgba(240, 136, 62, 0.1);
+  padding: 8px;
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+}
+
+.share-warning h3 {
+  font-family: var(--font-sans);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.share-warning p {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 360px;
+}
+
+.share-warning p.secondary-warning {
+  font-size: 0.8rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.share-shorten-btn {
+  width: 100%;
+  padding: 0.65rem;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 1.25rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.share-shorten-btn:hover:not(:disabled) {
+  background-color: var(--border);
+  border-color: var(--text-muted);
+}
+
+.share-shorten-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

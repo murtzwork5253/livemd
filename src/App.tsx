@@ -10,6 +10,10 @@ import { ExportModal } from './components/ExportModal/ExportModal';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { useDocuments } from './hooks/useDocuments';
 import { saveDocument, getDocument, getAllDocuments } from './lib/db';
+import { getSharedDocFromURL } from './lib/shareLink';
+import { ShareModal } from './components/ShareModal/ShareModal';
+import { useVersionHistory } from './hooks/useVersionHistory';
+import { HistoryPanel } from './components/HistoryPanel/HistoryPanel';
 import './App.css';
 
 export default function App() {
@@ -19,8 +23,23 @@ export default function App() {
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const { loadAllDocs, createDoc } = useDocuments();
 
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const sharedDocRef = useRef<{ title: string; content: string } | null>(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const { createSnapshot } = useVersionHistory();
+
   useEffect(() => {
-    loadAllDocs();
+    const initDocsAndShare = async () => {
+      await loadAllDocs();
+      const shared = await getSharedDocFromURL();
+      if (shared) {
+        sharedDocRef.current = shared;
+        dispatch({ type: 'SET_MARKDOWN', payload: shared.content });
+        dispatch({ type: 'SET_VIEW_MODE', payload: 'preview' });
+        dispatch({ type: 'SET_SHARED_VIEW', payload: true });
+      }
+    };
+    initDocsAndShare();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -36,6 +55,10 @@ export default function App() {
           };
           await saveDocument(updatedDoc);
           dispatch({ type: 'SET_LAST_SAVED', payload: updatedDoc.updatedAt });
+          
+          // Save manual snapshot on manual save trigger
+          await createSnapshot('Manual Save');
+
           const docs = await getAllDocuments();
           docs.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
           dispatch({ type: 'SET_DOCUMENTS', payload: docs });
@@ -44,6 +67,29 @@ export default function App() {
         console.error('Failed to save document:', err);
       }
     }
+  };
+
+  const handleCreatePersonalCopy = async () => {
+    if (sharedDocRef.current) {
+      await createDoc(sharedDocRef.current.title, sharedDocRef.current.content);
+      dispatch({ type: 'SET_SHARED_VIEW', payload: false });
+      sharedDocRef.current = null;
+      // Strip share query from URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete('share');
+      window.history.replaceState({}, '', url.pathname + url.search);
+      dispatch({ type: 'SET_VIEW_MODE', payload: 'split' });
+    }
+  };
+
+  const handleDismissShareBanner = () => {
+    dispatch({ type: 'SET_SHARED_VIEW', payload: false });
+    sharedDocRef.current = null;
+    // Strip share query from URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('share');
+    window.history.replaceState({}, '', url.pathname + url.search);
+    loadAllDocs();
   };
 
   useAutosave(1000);
@@ -183,6 +229,49 @@ export default function App() {
         </div>
         <div className="header-right">
           <button
+            className={`share-btn ${state.documents.length === 0 || state.isSharedView ? 'disabled' : ''}`}
+            onClick={() => !state.isSharedView && state.documents.length > 0 && setIsShareOpen(true)}
+            disabled={state.documents.length === 0 || state.isSharedView}
+            title={state.isSharedView ? 'Cannot share a shared link' : state.documents.length === 0 ? 'No document to share' : 'Share Document'}
+            aria-label="Share Document"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="header-icon"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+          </button>
+          <button
+            className={`history-toggle-btn ${isHistoryOpen ? 'active' : ''} ${state.documents.length === 0 ? 'disabled' : ''}`}
+            onClick={() => state.documents.length > 0 && setIsHistoryOpen(!isHistoryOpen)}
+            disabled={state.documents.length === 0}
+            title={state.documents.length === 0 ? 'No history available' : 'Version History'}
+            aria-label="Version History"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="header-icon"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </button>
+          <button
             className={`export-btn ${state.documents.length === 0 ? 'disabled' : ''}`}
             onClick={() => state.documents.length > 0 && setIsExportOpen(true)}
             disabled={state.documents.length === 0}
@@ -224,6 +313,26 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {state.isSharedView && (
+        <div className="shared-banner" role="status">
+          <span>
+            You are viewing a shared document. Click <strong>Edit Copy</strong> to save a personal copy.
+          </span>
+          <div className="shared-banner-actions">
+            <button className="banner-action-btn edit" onClick={handleCreatePersonalCopy}>
+              Edit Copy
+            </button>
+            <button
+              className="banner-close-btn"
+              onClick={handleDismissShareBanner}
+              aria-label="Dismiss banner"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="app-body">
         {state.sidebarOpen && (
@@ -326,12 +435,30 @@ export default function App() {
             </>
           )}
         </main>
+
+        <HistoryPanel
+          isOpen={isHistoryOpen}
+          onClose={() => setIsHistoryOpen(false)}
+          activeDocId={state.activeDocId}
+          onSnapshotRestored={() => {
+            // Take a snapshot right before restoring, so the user can easily undo if they want
+            createSnapshot('Before restore');
+          }}
+        />
       </div>
 
       <ExportModal
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
         markdownContent={state.markdown}
+      />
+      <ShareModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        markdownContent={state.markdown}
+        documentTitle={
+          state.documents.find((d) => d.id === state.activeDocId)?.title || 'Untitled Document'
+        }
       />
     </div>
   );

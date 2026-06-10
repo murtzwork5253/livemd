@@ -18,6 +18,7 @@ export type MarkdownState = {
   documents: Document[];
   lastSaved: Date | null;
   isLoading: boolean;
+  isSharedView: boolean;
 };
 
 export type MarkdownAction =
@@ -28,7 +29,8 @@ export type MarkdownAction =
   | { type: 'SET_ACTIVE_DOC'; payload: { id: string | null; content: string } }
   | { type: 'SET_LAST_SAVED'; payload: Date | null }
   | { type: 'SET_DOCUMENTS'; payload: Document[] }
-  | { type: 'SET_LOADING'; payload: boolean };
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_SHARED_VIEW'; payload: boolean };
 
 const isBrowser = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
 
@@ -43,6 +45,7 @@ export const initialState: MarkdownState = {
   documents: [],
   lastSaved: null,
   isLoading: true,
+  isSharedView: false,
 };
 
 export function markdownReducer(state: MarkdownState, action: MarkdownAction): MarkdownState {
@@ -63,6 +66,8 @@ export function markdownReducer(state: MarkdownState, action: MarkdownAction): M
       return { ...state, documents: action.payload };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
+    case 'SET_SHARED_VIEW':
+      return { ...state, isSharedView: action.payload };
     default:
       return state;
   }
