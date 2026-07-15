@@ -86,6 +86,106 @@ describe('useKeyboardShortcuts', () => {
     );
   });
 
+  it('should format strikethrough on Ctrl+Shift+X', () => {
+    const dispatchMock = vi.fn();
+    const viewMock = {
+      state: {
+        selection: {
+          main: { from: 0, to: 4, head: 4 },
+        },
+        sliceDoc: vi.fn().mockReturnValue('text'),
+      },
+      dispatch: dispatchMock,
+      focus: vi.fn(),
+    };
+    const editorRef = { current: { view: viewMock } } as unknown as React.RefObject<ReactCodeMirrorRef | null>;
+
+    useKeyboardShortcuts({ editorRef });
+
+    const event = {
+      ctrlKey: true,
+      metaKey: false,
+      shiftKey: true,
+      key: 'x',
+      preventDefault: vi.fn(),
+    } as unknown as KeyboardEvent;
+
+    keydownHandler!(event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(dispatchMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        changes: { from: 0, to: 4, insert: '~~text~~' },
+      })
+    );
+  });
+
+  it('should format code on Ctrl+`', () => {
+    const dispatchMock = vi.fn();
+    const viewMock = {
+      state: {
+        selection: {
+          main: { from: 0, to: 4, head: 4 },
+        },
+        sliceDoc: vi.fn().mockReturnValue('code'),
+      },
+      dispatch: dispatchMock,
+      focus: vi.fn(),
+    };
+    const editorRef = { current: { view: viewMock } } as unknown as React.RefObject<ReactCodeMirrorRef | null>;
+
+    useKeyboardShortcuts({ editorRef });
+
+    const event = {
+      ctrlKey: true,
+      metaKey: false,
+      key: '`',
+      preventDefault: vi.fn(),
+    } as unknown as KeyboardEvent;
+
+    keydownHandler!(event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(dispatchMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        changes: { from: 0, to: 4, insert: '`code`' },
+      })
+    );
+  });
+
+  it('should format link on Ctrl+K', () => {
+    const dispatchMock = vi.fn();
+    const viewMock = {
+      state: {
+        selection: {
+          main: { from: 0, to: 4, head: 4 },
+        },
+        sliceDoc: vi.fn().mockReturnValue('link text'),
+      },
+      dispatch: dispatchMock,
+      focus: vi.fn(),
+    };
+    const editorRef = { current: { view: viewMock } } as unknown as React.RefObject<ReactCodeMirrorRef | null>;
+
+    useKeyboardShortcuts({ editorRef });
+
+    const event = {
+      ctrlKey: true,
+      metaKey: false,
+      key: 'k',
+      preventDefault: vi.fn(),
+    } as unknown as KeyboardEvent;
+
+    keydownHandler!(event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(dispatchMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        changes: { from: 0, to: 4, insert: '[link text](https://example.com)' },
+      })
+    );
+  });
+
   it('should trigger onSave on Ctrl+S', () => {
     const onSaveMock = vi.fn();
     const viewMock = {
@@ -111,5 +211,172 @@ describe('useKeyboardShortcuts', () => {
 
     expect(event.preventDefault).toHaveBeenCalled();
     expect(onSaveMock).toHaveBeenCalled();
+  });
+
+  it('should trigger onToggleSidebar on Ctrl+Shift+B', () => {
+    const onToggleSidebarMock = vi.fn();
+    const viewMock = {
+      state: {
+        selection: {
+          main: { from: 0, to: 0, head: 0 },
+        },
+        sliceDoc: vi.fn().mockReturnValue(''),
+      },
+    };
+    const editorRef = { current: { view: viewMock } } as unknown as React.RefObject<ReactCodeMirrorRef | null>;
+
+    useKeyboardShortcuts({ editorRef, onToggleSidebar: onToggleSidebarMock });
+
+    const event = {
+      ctrlKey: true,
+      metaKey: false,
+      shiftKey: true,
+      key: 'b',
+      preventDefault: vi.fn(),
+    } as unknown as KeyboardEvent;
+
+    keydownHandler!(event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(onToggleSidebarMock).toHaveBeenCalled();
+  });
+
+  it('should trigger onToggleSidebar on Ctrl+\\', () => {
+    const onToggleSidebarMock = vi.fn();
+    const viewMock = {
+      state: {
+        selection: {
+          main: { from: 0, to: 0, head: 0 },
+        },
+        sliceDoc: vi.fn().mockReturnValue(''),
+      },
+    };
+    const editorRef = { current: { view: viewMock } } as unknown as React.RefObject<ReactCodeMirrorRef | null>;
+
+    useKeyboardShortcuts({ editorRef, onToggleSidebar: onToggleSidebarMock });
+
+    const event = {
+      ctrlKey: true,
+      metaKey: false,
+      key: '\\',
+      preventDefault: vi.fn(),
+    } as unknown as KeyboardEvent;
+
+    keydownHandler!(event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(onToggleSidebarMock).toHaveBeenCalled();
+  });
+
+  it('should trigger onChangeView with editor on Ctrl+Alt+1', () => {
+    const onChangeViewMock = vi.fn();
+    const viewMock = {
+      state: {
+        selection: {
+          main: { from: 0, to: 0, head: 0 },
+        },
+        sliceDoc: vi.fn().mockReturnValue(''),
+      },
+    };
+    const editorRef = { current: { view: viewMock } } as unknown as React.RefObject<ReactCodeMirrorRef | null>;
+
+    useKeyboardShortcuts({ editorRef, onChangeView: onChangeViewMock });
+
+    const event = {
+      ctrlKey: true,
+      metaKey: false,
+      altKey: true,
+      key: '1',
+      preventDefault: vi.fn(),
+    } as unknown as KeyboardEvent;
+
+    keydownHandler!(event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(onChangeViewMock).toHaveBeenCalledWith('editor');
+  });
+
+  it('should trigger onChangeView with split on Ctrl+Alt+2', () => {
+    const onChangeViewMock = vi.fn();
+    const viewMock = {
+      state: {
+        selection: {
+          main: { from: 0, to: 0, head: 0 },
+        },
+        sliceDoc: vi.fn().mockReturnValue(''),
+      },
+    };
+    const editorRef = { current: { view: viewMock } } as unknown as React.RefObject<ReactCodeMirrorRef | null>;
+
+    useKeyboardShortcuts({ editorRef, onChangeView: onChangeViewMock });
+
+    const event = {
+      ctrlKey: true,
+      metaKey: false,
+      altKey: true,
+      key: '2',
+      preventDefault: vi.fn(),
+    } as unknown as KeyboardEvent;
+
+    keydownHandler!(event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(onChangeViewMock).toHaveBeenCalledWith('split');
+  });
+
+  it('should trigger onChangeView with preview on Ctrl+Alt+3', () => {
+    const onChangeViewMock = vi.fn();
+    const viewMock = {
+      state: {
+        selection: {
+          main: { from: 0, to: 0, head: 0 },
+        },
+        sliceDoc: vi.fn().mockReturnValue(''),
+      },
+    };
+    const editorRef = { current: { view: viewMock } } as unknown as React.RefObject<ReactCodeMirrorRef | null>;
+
+    useKeyboardShortcuts({ editorRef, onChangeView: onChangeViewMock });
+
+    const event = {
+      ctrlKey: true,
+      metaKey: false,
+      altKey: true,
+      key: '3',
+      preventDefault: vi.fn(),
+    } as unknown as KeyboardEvent;
+
+    keydownHandler!(event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(onChangeViewMock).toHaveBeenCalledWith('preview');
+  });
+
+  it('should trigger onChangeView with editor on Alt+1', () => {
+    const onChangeViewMock = vi.fn();
+    const viewMock = {
+      state: {
+        selection: {
+          main: { from: 0, to: 0, head: 0 },
+        },
+        sliceDoc: vi.fn().mockReturnValue(''),
+      },
+    };
+    const editorRef = { current: { view: viewMock } } as unknown as React.RefObject<ReactCodeMirrorRef | null>;
+
+    useKeyboardShortcuts({ editorRef, onChangeView: onChangeViewMock });
+
+    const event = {
+      ctrlKey: false,
+      metaKey: false,
+      altKey: true,
+      key: '1',
+      preventDefault: vi.fn(),
+    } as unknown as KeyboardEvent;
+
+    keydownHandler!(event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(onChangeViewMock).toHaveBeenCalledWith('editor');
   });
 });

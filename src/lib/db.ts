@@ -1,10 +1,10 @@
-import { openDB, type IDBPDatabase } from 'idb';
+import { openDB, type IDBPDatabase, type IDBPTransaction } from 'idb';
 import type { Document, Snapshot } from '../context/markdownReducer';
 
 export type { Snapshot };
 
 const DB_NAME = 'livemd';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_NAME = 'documents';
 const SNAPSHOTS_STORE_NAME = 'snapshots';
 
@@ -12,7 +12,12 @@ const SNAPSHOTS_STORE_NAME = 'snapshots';
  * Promise wrapper that resolves to the IndexedDB database instance.
  */
 export const dbPromise = openDB(DB_NAME, DB_VERSION, {
-  upgrade(db: IDBPDatabase, oldVersion: number) {
+  upgrade(
+    db: IDBPDatabase,
+    oldVersion: number,
+    _newVersion: number | null,
+    transaction: IDBPTransaction<unknown, string[], 'versionchange'>,
+  ) {
     if (oldVersion < 1) {
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
@@ -25,6 +30,12 @@ export const dbPromise = openDB(DB_NAME, DB_VERSION, {
         const snapStore = db.createObjectStore(SNAPSHOTS_STORE_NAME, { keyPath: 'id' });
         snapStore.createIndex('docId', 'docId');
         snapStore.createIndex('createdAt', 'createdAt');
+      }
+    }
+    if (oldVersion < 3) {
+      const store = transaction.objectStore(STORE_NAME);
+      if (!store.indexNames.contains('tags')) {
+        store.createIndex('tags', 'tags', { multiEntry: true });
       }
     }
   },
@@ -118,4 +129,16 @@ export async function pruneSnapshots(docId: string, keep = 50): Promise<void> {
     await Promise.all(toDelete.map((s) => tx.store.delete(s.id)));
   }
   await tx.done;
+}
+
+/**
+ * Retrieves all documents containing a specific tag from IndexedDB.
+ * @param tag The tag string.
+ * @returns A Promise resolving to an array of Documents.
+ */
+export async function getDocumentsByTag(tag: string): Promise<Document[]> {
+  const db = await dbPromise;
+  const tx = db.transaction(STORE_NAME, 'readonly');
+  const index = tx.store.index('tags');
+  return index.getAll(tag);
 }

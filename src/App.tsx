@@ -14,6 +14,7 @@ import { getSharedDocFromURL } from './lib/shareLink';
 import { ShareModal } from './components/ShareModal/ShareModal';
 import { useVersionHistory } from './hooks/useVersionHistory';
 import { HistoryPanel } from './components/HistoryPanel/HistoryPanel';
+import { SettingsModal } from './components/SettingsModal/SettingsModal';
 import './App.css';
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const sharedDocRef = useRef<{ title: string; content: string } | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { createSnapshot } = useVersionHistory();
 
   useEffect(() => {
@@ -93,7 +95,12 @@ export default function App() {
   };
 
   useAutosave(1000);
-  useKeyboardShortcuts({ editorRef, onSave: handleSave });
+  useKeyboardShortcuts({
+    editorRef,
+    onSave: handleSave,
+    onToggleSidebar: () => dispatch({ type: 'TOGGLE_SIDEBAR' }),
+    onChangeView: (view) => dispatch({ type: 'SET_VIEW_MODE', payload: view }),
+  });
   const [editorWidth, setEditorWidth] = useState(50); // percentage
   const isResizing = useRef(false);
 
@@ -300,7 +307,7 @@ export default function App() {
               <line x1="12" x2="12" y1="15" y2="3" />
             </svg>
           </button>
-          <div className="theme-toggle">
+          {/* <div className="theme-toggle">
             <button
               onClick={() =>
                 dispatch({ type: 'SET_THEME', payload: state.theme === 'dark' ? 'light' : 'dark' })
@@ -318,7 +325,26 @@ export default function App() {
                 </svg>
               )}
             </button>
-          </div>
+          </div> */}
+          <button
+            className="settings-btn"
+            onClick={() => setIsSettingsOpen(true)}
+            title="Settings"
+            aria-label="Settings"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="header-icon"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -469,6 +495,7 @@ export default function App() {
           state.documents.find((d) => d.id === state.activeDocId)?.title || 'Untitled Document'
         }
       />
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 }

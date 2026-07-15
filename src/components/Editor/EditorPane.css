@@ -1,0 +1,240 @@
+/* ==========================================================================
+   Editor pane — CodeMirror search (Find & Replace) panel theming
+   The @codemirror/search panel ships with its own baseline styles injected by
+   the active theme (oneDark / light). We override them with the project design
+   tokens. `!important` is required because CodeMirror theme styles are injected
+   at runtime with competing specificity.
+   ========================================================================== */
+
+.cm-panels {
+  background-color: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+
+.cm-panels.cm-panels-top {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.cm-panels.cm-panels-bottom {
+  border-top: 1px solid var(--border) !important;
+}
+
+.cm-panel.cm-search {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px !important;
+  padding: 14px 40px 14px 16px !important;
+  font-family: var(--font-sans), inherit;
+  font-size: 13px;
+  background-color: var(--bg-elevated) !important;
+}
+
+/* Force <br> to act as row break in flexbox */
+.cm-panel.cm-search br {
+  flex-basis: 100% !important;
+  height: 0 !important;
+  margin: 0 !important;
+}
+
+/* Search / replace text inputs */
+.cm-panel.cm-search input.cm-textfield {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+  width: 220px !important;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.cm-panel.cm-search input.cm-textfield::placeholder {
+  color: var(--text-muted);
+}
+
+.cm-panel.cm-search input.cm-textfield:focus {
+  border-color: var(--accent-blue) !important;
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2) !important;
+}
+
+/* Buttons: next / previous / all / replace / replace all */
+.cm-panel.cm-search button.cm-button {
+  background-image: none !important;
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 6px !important;
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cm-panel.cm-search button.cm-button:hover {
+  background-color: var(--bg-elevated) !important;
+  border-color: var(--accent-blue) !important;
+  color: var(--accent-blue) !important;
+}
+
+.cm-panel.cm-search button.cm-button:active {
+  background-color: var(--bg-primary) !important;
+  transform: translateY(1px);
+}
+
+/* Checkbox labels: match case / regexp / by word */
+.cm-panel.cm-search label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted) !important;
+  font-size: 13px !important;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cm-panel.cm-search label input[type='checkbox'] {
+  accent-color: var(--accent-blue) !important;
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
+/* Hide the regexp checkbox option */
+.cm-panel.cm-search label:has(input[name='re']) {
+  display: none !important;
+}
+
+/* Close (×) button, top-right of the panel */
+.cm-panel.cm-search button[name='close'] {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-muted) !important;
+  border-radius: 50% !important;
+  font-size: 16px !important;
+  cursor: pointer;
+  transition: all 0.15s ease !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+.cm-panel.cm-search button[name='close']:hover {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Match highlights so they read against both themes */
+.cm-searchMatch {
+  background-color: color-mix(in srgb, var(--accent-blue) 25%, transparent) !important;
+}
+
+.cm-searchMatch.cm-searchMatch-selected {
+  background-color: color-mix(in srgb, var(--accent-orange) 45%, transparent) !important;
+}
+
+/* ==========================================================================
+   Image drop zone + toast (Task 5J)
+   ========================================================================== */
+
+.editor-drop-zone[data-drag-over='true']::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 2px dashed var(--accent-blue);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--accent-blue) 8%, transparent);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.editor-toast {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(90%, 460px);
+  padding: 10px 12px;
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--accent-orange);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+  z-index: 10;
+}
+
+.editor-toast .toast-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--accent-orange);
+}
+
+.editor-toast .toast-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.editor-toast .toast-close-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.editor-toast .toast-close-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Editor Metadata Bar (Document Title & TagInput) */
+.editor-metadata-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.editor-metadata-title {
+  font-family: var(--font-sans), sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  border: 1px solid transparent;
+  background: transparent;
+  outline: none;
+  border-radius: 4px;
+  width: 100%;
+  padding: 2px 4px;
+  transition: all 0.15s ease;
+}
+
+.editor-metadata-title:hover {
+  border-color: var(--border);
+}
+
+.editor-metadata-title:focus {
+  border-color: var(--accent-blue);
+  background-color: var(--bg-primary);
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.15);
+}

@@ -1,23 +1,49 @@
 import { useState } from 'react';
 import { useDocuments } from '../../hooks/useDocuments';
+import { useMarkdown } from '../../context/MarkdownContext';
 import { DocumentList } from './DocumentList';
+import { TemplateModal } from '../TemplateModal/TemplateModal';
+import { searchDocuments } from '../../lib/search';
+import type { Template } from '../../lib/templates';
 import './Sidebar.css';
 
 export function Sidebar() {
   const { documents, createDoc, openDoc, renameDoc, deleteDoc, activeDocId, isLoading } =
     useDocuments();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { state, dispatch } = useMarkdown();
+  const { searchQuery, activeTagFilter } = state;
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
-  const handleCreateNew = async () => {
-    await createDoc('Untitled Document');
+  const handleCreateNew = () => {
+    setIsTemplateModalOpen(true);
   };
 
-  const filteredDocs = documents.filter((doc) =>
-    doc.title.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const handleSelectTemplate = async (template: Template) => {
+    await createDoc(template.getTitle(), template.getContent());
+    setIsTemplateModalOpen(false);
+  };
+
+  const handleStartBlank = async () => {
+    await createDoc('Untitled Document');
+    setIsTemplateModalOpen(false);
+  };
+
+  const searchedDocs = searchDocuments(documents, searchQuery);
+  const filteredDocs = searchedDocs.filter((doc) => {
+    return activeTagFilter ? (doc.tags || []).includes(activeTagFilter) : true;
+  });
+
+  const allTags = Array.from(new Set(documents.flatMap((doc) => doc.tags || []))).sort();
 
   return (
     <aside className="sidebar">
+      {isTemplateModalOpen && (
+        <TemplateModal
+          onSelect={handleSelectTemplate}
+          onStartBlank={handleStartBlank}
+          onClose={() => setIsTemplateModalOpen(false)}
+        />
+      )}
       <div className="sidebar-header">
         <button className="new-doc-btn" onClick={handleCreateNew} aria-label="Create new document">
           <svg
@@ -54,14 +80,14 @@ export function Sidebar() {
             type="text"
             placeholder="Search documents..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => dispatch({ type: 'SET_SEARCH_QUERY', payload: e.target.value })}
             className="search-input"
-            aria-label="Search documents by title"
+            aria-label="Search documents by title and content"
           />
           {searchQuery && (
             <button
               className="search-clear-btn"
-              onClick={() => setSearchQuery('')}
+              onClick={() => dispatch({ type: 'SET_SEARCH_QUERY', payload: '' })}
               aria-label="Clear search query"
             >
               <svg
@@ -92,12 +118,38 @@ export function Sidebar() {
           <DocumentList
             documents={filteredDocs}
             activeDocId={activeDocId}
+            searchQuery={searchQuery}
             onOpen={openDoc}
             onRename={renameDoc}
             onDelete={deleteDoc}
           />
         )}
       </div>
+
+      {allTags.length > 0 && (
+        <div className="sidebar-tags-section">
+          <h3>Tags</h3>
+          <div className="sidebar-tags-list">
+            <button
+              className={`tag-filter-btn ${activeTagFilter === null ? 'active' : ''}`}
+              onClick={() => dispatch({ type: 'SET_ACTIVE_TAG_FILTER', payload: null })}
+              aria-label="Show all documents"
+            >
+              All
+            </button>
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                className={`tag-filter-btn ${activeTagFilter === tag ? 'active' : ''}`}
+                onClick={() => dispatch({ type: 'SET_ACTIVE_TAG_FILTER', payload: tag })}
+                aria-label={`Filter by tag ${tag}`}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

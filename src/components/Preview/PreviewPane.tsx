@@ -1,11 +1,24 @@
 import React, { memo } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useMarkdown } from '../../context/MarkdownContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { slugify } from '../../lib/markdownHelpers';
 import { TableOfContents } from '../TableOfContents/TableOfContents';
 import ErrorBoundary from './ErrorBoundary';
+import { TypographyPanel } from '../TypographyPanel/TypographyPanel';
+import type { ReadingSettings } from '../../context/markdownReducer';
+
+/**
+ * react-markdown's default URL sanitizer strips `data:` URIs, which blocks
+ * inline base64 images (e.g. dropped/pasted images). Allow `data:image/*`
+ * specifically while deferring to the default transform for everything else,
+ * so dangerous data URIs like `data:text/html` remain blocked.
+ */
+function imageAwareUrlTransform(url: string): string {
+  if (/^data:image\//i.test(url)) return url;
+  return defaultUrlTransform(url);
+}
 
 function getTextFromChildren(children: React.ReactNode): string {
   if (!children) return '';
@@ -125,7 +138,11 @@ const MemoizedMarkdown = memo(
       throw new Error('Simulated Markdown Preview Crash!');
     }
     return (
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={components}
+        urlTransform={imageAwareUrlTransform}
+      >
         {content}
       </ReactMarkdown>
     );
@@ -133,20 +150,43 @@ const MemoizedMarkdown = memo(
   (prevProps, nextProps) => prevProps.content === nextProps.content,
 );
 
+const fontMap = {
+  serif: "'Lora', Georgia, serif",
+  sans: "'Inter', system-ui, sans-serif",
+  mono: "'JetBrains Mono', monospace",
+};
+
 export function PreviewPane() {
-  const { state } = useMarkdown();
+  const { state, dispatch } = useMarkdown();
   const debouncedMarkdown = useDebounce(state.markdown, 300);
+  const { readingSettings } = state;
+
+  const handleSettingsChange = (newSettings: Partial<ReadingSettings>) => {
+    dispatch({ type: 'SET_READING_SETTINGS', payload: newSettings });
+  };
 
   return (
     <>
       <TableOfContents markdown={debouncedMarkdown} />
       <div className="preview-container" id="preview-pane-container">
-        <div className="preview-content">
+        <div
+          className="preview-content"
+          style={{
+            fontSize: `${readingSettings.fontSize}px`,
+            maxWidth: `${readingSettings.lineWidth}px`,
+            fontFamily: fontMap[readingSettings.fontFamily],
+            lineHeight: readingSettings.lineHeight,
+            margin: '0 auto',
+          }}
+        >
           <ErrorBoundary resetKey={debouncedMarkdown}>
             <MemoizedMarkdown content={debouncedMarkdown} components={components} />
           </ErrorBoundary>
         </div>
       </div>
+      {state.viewMode === 'preview' && (
+        <TypographyPanel settings={readingSettings} onChange={handleSettingsChange} />
+      )}
     </>
   );
 }

@@ -323,3 +323,82 @@
     transform: translateX(100%);
   }
 }
+
+/* Sidebar Tags Filter Section */
+.sidebar-tags-section {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  background-color: var(--bg-secondary);
+}
+
+.sidebar-tags-section h3 {
+  font-family: var(--font-sans), sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.sidebar-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-filter-btn {
+  font-family: var(--font-sans), sans-serif;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tag-filter-btn:hover {
+  background-color: var(--border);
+  border-color: var(--text-muted);
+}
+
+.tag-filter-btn.active {
+  background-color: var(--accent-blue);
+  color: #ffffff;
+  border-color: var(--accent-blue);
+}
+
+/* Document Item Tag Pills */
+.doc-item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.doc-tag-pill {
+  font-family: var(--font-sans), sans-serif;
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background-color: rgba(88, 166, 255, 0.1);
+  color: var(--accent-blue);
+  border: 1px solid rgba(88, 166, 255, 0.15);
+}
+
+.document-item.active .doc-tag-pill {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Search Term Highlighting */
+mark {
+  background-color: rgba(240, 136, 62, 0.35); /* Accent orange tint */
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}

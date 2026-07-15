@@ -52,7 +52,8 @@
 }
 
 .theme-toggle button,
-.export-btn {
+.export-btn,
+.settings-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,7 +69,8 @@
 }
 
 .theme-toggle button:hover,
-.export-btn:hover {
+.export-btn:hover,
+.settings-btn:hover {
   background: var(--bg-secondary);
   border-color: var(--text-muted);
   color: var(--accent-blue);

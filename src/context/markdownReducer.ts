@@ -2,6 +2,7 @@ export type Document = {
   id: string;
   title: string;
   content: string;
+  tags?: string[];
   createdAt: Date;
   updatedAt: Date;
 };
@@ -18,6 +19,13 @@ export interface Snapshot {
 export type ViewMode = 'editor' | 'split' | 'preview';
 export type Theme = 'light' | 'dark';
 
+export type ReadingSettings = {
+  fontSize: number;
+  lineWidth: number;
+  fontFamily: 'serif' | 'sans' | 'mono';
+  lineHeight: number;
+};
+
 export type MarkdownState = {
   markdown: string;
   theme: Theme;
@@ -29,6 +37,9 @@ export type MarkdownState = {
   lastSaved: Date | null;
   isLoading: boolean;
   isSharedView: boolean;
+  readingSettings: ReadingSettings;
+  searchQuery: string;
+  activeTagFilter: string | null;
 };
 
 export type MarkdownAction =
@@ -41,7 +52,10 @@ export type MarkdownAction =
   | { type: 'SET_DOCUMENTS'; payload: Document[] }
   | { type: 'SET_SNAPSHOTS'; payload: Snapshot[] }
   | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_SHARED_VIEW'; payload: boolean };
+  | { type: 'SET_SHARED_VIEW'; payload: boolean }
+  | { type: 'SET_READING_SETTINGS'; payload: Partial<ReadingSettings> }
+  | { type: 'SET_SEARCH_QUERY'; payload: string }
+  | { type: 'SET_ACTIVE_TAG_FILTER'; payload: string | null };
 
 const isBrowser = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
 
@@ -51,13 +65,29 @@ export const initialState: MarkdownState = {
     : '# Welcome to LiveMD\n\nStart writing...',
   theme: isBrowser ? (localStorage.getItem('livemd-theme') as Theme) || 'dark' : 'dark',
   viewMode: isBrowser ? (localStorage.getItem('livemd-viewmode') as ViewMode) || 'split' : 'split',
-  sidebarOpen: true,
+  sidebarOpen: false,
   activeDocId: null,
   documents: [],
   snapshots: [],
   lastSaved: null,
   isLoading: true,
   isSharedView: false,
+  readingSettings: (() => {
+    if (!isBrowser) {
+      return { fontSize: 17, lineWidth: 680, fontFamily: 'serif', lineHeight: 1.8 };
+    }
+    const saved = localStorage.getItem('livemd-readingsettings');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // Fallback
+      }
+    }
+    return { fontSize: 17, lineWidth: 680, fontFamily: 'serif', lineHeight: 1.8 };
+  })() as ReadingSettings,
+  searchQuery: '',
+  activeTagFilter: null,
 };
 
 export function markdownReducer(state: MarkdownState, action: MarkdownAction): MarkdownState {
@@ -82,6 +112,20 @@ export function markdownReducer(state: MarkdownState, action: MarkdownAction): M
       return { ...state, isLoading: action.payload };
     case 'SET_SHARED_VIEW':
       return { ...state, isSharedView: action.payload };
+    case 'SET_READING_SETTINGS': {
+      const updated = { ...state.readingSettings, ...action.payload };
+      if (isBrowser) {
+        localStorage.setItem('livemd-readingsettings', JSON.stringify(updated));
+      }
+      return {
+        ...state,
+        readingSettings: updated,
+      };
+    }
+    case 'SET_SEARCH_QUERY':
+      return { ...state, searchQuery: action.payload };
+    case 'SET_ACTIVE_TAG_FILTER':
+      return { ...state, activeTagFilter: action.payload };
     default:
       return state;
   }

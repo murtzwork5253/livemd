@@ -160,6 +160,28 @@ export function useDocuments() {
     }
   };
 
+  /**
+   * Updates tags for a document by its ID.
+   */
+  const updateDocTags = async (id: string, tags: string[]): Promise<void> => {
+    try {
+      const doc = await getDocument(id);
+      if (doc) {
+        const updated = {
+          ...doc,
+          tags,
+          updatedAt: new Date(),
+        };
+        await saveDocument(updated);
+        const docs = await getAllDocuments();
+        docs.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        dispatch({ type: 'SET_DOCUMENTS', payload: docs });
+      }
+    } catch (err) {
+      console.error('Failed to update document tags:', err);
+    }
+  };
+
   return {
     documents: state.documents,
     activeDocId: state.activeDocId,
@@ -169,5 +191,6 @@ export function useDocuments() {
     openDoc,
     renameDoc,
     deleteDoc,
+    updateDocTags,
   };
 }

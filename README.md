@@ -1,30 +1,35 @@
 # LiveMD — Live Markdown Editor
 
-> A production-grade, split-pane Markdown editor built with React, TypeScript, and Vite. Features a live rendering preview, CodeMirror syntax highlighting, IndexedDB multi-document management, automatic local saving, and a polished developer-focused UI.
+> A production-grade, split-pane Markdown editor built with React 19, TypeScript, and Vite. Features live GitHub-flavored preview, CodeMirror syntax highlighting, IndexedDB multi-document management, automatic saving, backend-free document sharing via compressed links, and full version history with a visual diff viewer.
 
 ---
 
 ## 🎨 Visual Direction
 
-LiveMD is designed around a **Dark Editorial / Developer Tool** aesthetic (VS Code meets Notion). It uses a clean, distraction-free typography system, subtle border highlights, and muted color accents optimized for reading and coding comfort.
+LiveMD is designed around a **Dark Editorial / Developer Tool** aesthetic (VS Code meets Notion). It uses a clean, distraction-free typography system, subtle border highlights, and muted color accents optimized for reading and coding comfort. A light theme is available in Settings.
 
 ---
 
 ## ✨ Features
 
-- **Split-Pane Editing & Live Preview:** Fully synchronised scrolling, syntax highlighting powered by CodeMirror, and real-time GitHub-flavored rendering.
-- **Multi-Document Support:** Open, rename, search, and delete documents stored locally on your device via **IndexedDB** (`idb`).
-- **Autosave & Save Status:** Edits are automatically saved in the background with a visual status bar showing when they were last saved.
-- **Segmented Mobile Layout:** Adapts responsively down to mobile dimensions:
+- **Split-Pane Editing & Live Preview:** Real-time GitHub-flavored Markdown rendering (`remark-gfm`) with syntax highlighting powered by CodeMirror 6 and highlighted code blocks (`rehype-highlight`). Drag the divider to resize panes.
+- **Multi-Document Support:** Create, rename, search, and delete documents stored locally on your device via **IndexedDB** (`idb`), with schema migrations handled across database versions.
+- **Autosave & Save Status:** Edits are debounced and saved automatically in the background, with a status bar showing word count, estimated read time, and last-saved time.
+- **Version History & Diff Viewer:** Automatic snapshots every 5 minutes plus a snapshot on every manual save. Browse past versions in a side panel, compare them with a **line- and word-level diff viewer**, and restore any version (a safety snapshot is taken automatically before a restore). History is pruned to the 50 most recent snapshots per document to bound storage.
+- **Share by Link (No Backend):** Documents are serialized, **gzip-compressed via the browser `CompressionStream` API**, and Base64-encoded directly into a shareable URL — no server required. Opening a shared link shows a read-only preview with an **"Edit Copy"** action to fork it into your own local library.
+- **Image Insertion:** Insert images directly into the document as inline Base64 data URLs, with a warning for oversized images (> 500 KB) to prevent document bloat.
+- **Table of Contents:** Auto-generated from document headings; click any entry to smoothly scroll the preview to that section.
+- **Export Formats:** One-click download of documents to:
+  - Raw Markdown source file (`.md`)
+  - Styled, self-contained HTML file (`.html`)
+  - PDF (`.pdf`) via `html2pdf.js`, with page-break-aware styling
+- **Settings Panel:** Theme selection (light/dark) and a full keyboard-shortcut reference.
+- **Premium Loading & Empty States:** Animated skeleton shimmers load during database initialization, and a vector empty canvas is displayed if no documents remain.
+- **Robust Error Recovery:** Class-based React **Error Boundary** traps rendering or markdown syntax crashes inside the preview, recovering automatically as soon as the user corrects their input.
+- **Responsive Layout:** Adapts responsively down to mobile dimensions:
   - **Desktop (> 1024px):** Full-sized split layout with draggable pane resizing.
   - **Tablet (768px - 1024px):** Side-by-side layout with collapsible document sidebar.
   - **Mobile (< 768px):** A segmented pill selector (`Write` vs `Preview`) and a slide-over sidebar drawer overlay.
-- **Export Formats:** One-click download of documents to:
-  - Raw Markdown source file (`.md`)
-  - Rendered structure file (`.html`)
-  - PDF export (*Coming Soon*)
-- **Premium Loading & Empty States:** Animated skeleton shimmers load during database initialization, and a vector empty canvas is displayed if no documents remain.
-- **Robust Error Recovery:** Class-based React **Error Boundary** traps rendering or markdown syntax crashes inside the preview, recovering automatically as soon as the user corrects their input.
 
 ---
 
@@ -32,14 +37,20 @@ LiveMD is designed around a **Dark Editorial / Developer Tool** aesthetic (VS Co
 
 Speed up your writing workflow with editor hotkeys:
 
-| Action | Shortcut | Toolbar Output |
+`Ctrl` on Windows/Linux, `Cmd` on macOS.
+
+| Action | Shortcut | Result |
 | :--- | :--- | :--- |
-| **Bold** | `Ctrl + B` / `Cmd + B` | `**selected text**` |
-| *Italic* | `Ctrl + I` / `Cmd + I` | `*selected text*` |
+| **Bold** | `Ctrl + B` | `**selected text**` |
+| *Italic* | `Ctrl + I` | `*selected text*` |
 | ~~Strikethrough~~ | `Ctrl + Shift + X` | `~~selected text~~` |
-| `Code` | `Ctrl + \`` | `` `selected text` `` |
-| Link | `Ctrl + K` / `Cmd + K` | `[selected text](url)` |
-| Save Document | `Ctrl + S` / `Cmd + S` | Triggers immediate database write |
+| `Inline code` | `` Ctrl + ` `` | `` `selected text` `` |
+| Insert link | `Ctrl + K` | `[selected text](url)` |
+| Save document | `Ctrl + S` | Immediate database write + snapshot |
+| Toggle sidebar | `Ctrl + Shift + B` (or `Ctrl + \`) | Show/hide document list |
+| Editor view | `Ctrl + Alt + 1` (or `Alt + 1`) | Editor-only layout |
+| Split view | `Ctrl + Alt + 2` (or `Alt + 2`) | Split editor/preview layout |
+| Preview view | `Ctrl + Alt + 3` (or `Alt + 3`) | Preview-only layout |
 
 ---
 
@@ -90,20 +101,42 @@ LiveMD relies on a modular architecture to keep concerns separated:
 
 ```
 src/
-├── components/          # UI Components
-│   ├── Editor/          # CodeMirror Wrapper
-│   ├── Preview/         # ReactMarkdown Renderer & Error Boundary
-│   ├── Sidebar/         # Collapsible Document List with Search
-│   ├── StatusBar/       # Word count, read time, autosave indicator
-│   ├── Toolbar/         # Action buttons wrapping markdown symbols
-│   └── ExportModal/     # Export file download picker
-├── context/             # AppState Context (useReducer)
-├── hooks/               # Custom React Hooks (useAutosave, useDebounce, useDocuments, etc.)
-├── lib/                 # Third-party utilities (IndexedDB schema, export download triggers)
-├── styles/              # Global variables, typography tokens, light/dark themes
-├── App.tsx              # Main Workspace Coordinator
-└── main.tsx             # DOM Root mounter
+├── components/
+│   ├── Editor/            # CodeMirror wrapper
+│   ├── Preview/           # ReactMarkdown renderer + Error Boundary
+│   ├── Sidebar/           # Collapsible document list with search
+│   ├── StatusBar/         # Word count, read time, autosave indicator
+│   ├── Toolbar/           # Markdown formatting action buttons
+│   ├── TableOfContents/   # Heading outline with click-to-scroll
+│   ├── HistoryPanel/      # Version history browser + diff viewer
+│   ├── ShareModal/        # Compressed share-link generation
+│   ├── ExportModal/       # Markdown / HTML / PDF export picker
+│   ├── SettingsModal/     # Theme + keyboard shortcut reference
+│   └── ConfirmModal/      # Reusable confirmation dialog
+├── context/               # App state (MarkdownContext + markdownReducer)
+├── hooks/                 # useAutosave, useDebounce, useDocuments,
+│                          #   useVersionHistory, useKeyboardShortcuts, useWordCount
+├── lib/                   # db (IndexedDB schema/migrations), export,
+│                          #   shareLink (compression), diff, imageUpload, markdownHelpers
+├── styles/                # Global variables, typography tokens, light/dark themes
+├── App.tsx                # Main workspace coordinator
+└── main.tsx               # DOM root mounter
 ```
 
 ### State Management
-All application states (documents list, view modes, themes, active document details) are handled using a single unified React Context and Reducer (`markdownReducer`). State variables like theme and view mode are synced back to localStorage for persistence across reloads.
+
+Application state (documents list, active document, view mode, theme, snapshots, shared-view flag) is managed through a single unified React Context + `useReducer` (`markdownReducer`). Theme and view-mode preferences are mirrored to `localStorage` so they persist across reloads, while document and snapshot data live in IndexedDB.
+
+### How Share-by-Link Works
+
+There is no server. When you share a document, its `{ title, content }` payload is JSON-serialized, streamed through the browser's native `CompressionStream('gzip')`, Base64-encoded, and written to a `?share=` URL parameter (prefixed `v2:` for format versioning, with a legacy uncompressed fallback for backward compatibility). Opening such a URL reverses the process via `DecompressionStream` and renders a read-only preview.
+
+### Version History
+
+`useVersionHistory` writes content snapshots to a dedicated IndexedDB object store — automatically every 5 minutes, and on each manual save — de-duplicating against the last stored content to avoid redundant writes. The `HistoryPanel` diffs versions using a hand-written line + word diff (`lib/diff.ts`) and can restore a prior version, taking a "Before restore" safety snapshot first.
+
+---
+
+## 🧪 Testing
+
+Core logic is covered by [Vitest](https://vitest.dev/) unit tests under `tests/`, including the state reducer, autosave/debounce hooks, word count, export helpers, the diff engine, share-link encode/decode, and the IndexedDB layer. Run them with `npm run test`.

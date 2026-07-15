@@ -5,14 +5,33 @@ import type { Document } from '../../context/markdownReducer';
 interface DocumentListProps {
   documents: Document[];
   activeDocId: string | null;
+  searchQuery: string;
   onOpen: (id: string) => Promise<void>;
   onRename: (id: string, newTitle: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function highlightMatch(text: string, query: string): string {
+  const escapedText = escapeHtml(text);
+  if (!query.trim()) return escapedText;
+  const escapedQuery = query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+  const regex = new RegExp(`(${escapedQuery})`, 'gi');
+  return escapedText.replace(regex, '<mark>$1</mark>');
+}
+
 export function DocumentList({
   documents,
   activeDocId,
+  searchQuery,
   onOpen,
   onRename,
   onDelete,
@@ -128,9 +147,30 @@ export function DocumentList({
             ) : (
               <>
                 <div className="doc-item-main" onDoubleClick={() => handleDoubleClick(doc)}>
-                  <span className="doc-title" title="Double-click to rename">
-                    {doc.title}
-                  </span>
+                  <span
+                    className="doc-title"
+                    title="Double-click to rename"
+                    {...(searchQuery.trim()
+                      ? {
+                          dangerouslySetInnerHTML: {
+                            __html: highlightMatch(doc.title, searchQuery),
+                          },
+                        }
+                      : { children: doc.title })}
+                  />
+                  {doc.tags && doc.tags.length > 0 && (
+                    <div className="doc-item-tags">
+                      {doc.tags.slice(0, 3).map((tag) => (
+                        <span
+                          key={tag}
+                          className="doc-tag-pill"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <span className="doc-date">{formatDocDate(doc.updatedAt)}</span>
                 </div>
                 <button

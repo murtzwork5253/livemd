@@ -621,20 +621,22 @@ Each feature below is self-contained — it can be built in any order. Each sect
 
 ### Feature Overview Table
 
-| # | Feature | Category | Effort | Depends On |
-|---|---|---|---|---|
-| 5A | Focus / distraction-free mode | UX | ~1 day | Phase 2 (view modes) |
-| 5B | Version history & snapshots | Productivity | ~3 days | Phase 3 (IndexedDB) |
-| 5C | Find & replace | Productivity | ~1 day | Phase 1 (CodeMirror) |
-| 5D | AI writing assistant | AI | ~4 days | Groq API (free) |
-| 5E | AI document title generator | AI | ~1 day | 5D (Groq setup) |
-| 5F | Share by link | Sharing | ~1 day | Phase 1 (URL API) |
-| 5G | Publish as GitHub Gist | Sharing | ~3 days | Phase 3 (multi-doc) |
-| 5H | Command palette | Power user | ~5 days | All phases |
-| 5I | Document templates | Power user | ~1 day | Phase 3 (multi-doc) |
-| 5J | Drag & drop image upload | UX | ~2 days | Phase 1 (CodeMirror) |
-| 5K | Reading mode + typography | UX | ~1 day | Phase 2 (view modes) |
-| 5L | Tags & full-text search | Productivity | ~3 days | Phase 3 (IndexedDB) |
+| # | Feature | Category | Effort | Depends On | Status |
+|---|---|---|---|---|---|
+| 5A | Focus / distraction-free mode | UX | ~1 day | Phase 2 (view modes) | ⬜ Planned |
+| 5B | Version history & snapshots | Productivity | ~3 days | Phase 3 (IndexedDB) | ✅ Done |
+| 5C | Find & replace | Productivity | ~1 day | Phase 1 (CodeMirror) | 🚧 In Progress |
+| 5D | AI writing assistant | AI | ~4 days | Groq API (free) | ⬜ Planned |
+| 5E | AI document title generator | AI | ~1 day | 5D (Groq setup) | ⬜ Planned |
+| 5F | Share by link | Sharing | ~1 day | Phase 1 (URL API) | ✅ Done |
+| 5G | Publish as GitHub Gist | Sharing | ~3 days | Phase 3 (multi-doc) | ⬜ Planned |
+| 5H | Command palette | Power user | ~5 days | All phases | ⬜ Planned |
+| 5I | Document templates | Power user | ~1 day | Phase 3 (multi-doc) | ⬜ Planned |
+| 5J | Drag & drop image upload | UX | ~2 days | Phase 1 (CodeMirror) | 🚧 In Progress |
+| 5K | Reading mode + typography | UX | ~1 day | Phase 2 (view modes) | ⬜ Planned |
+| 5L | Tags & full-text search | Productivity | ~3 days | Phase 3 (IndexedDB) | ⬜ Planned |
+
+> **Current focus (as of 2026-07-02):** Tasks **5C — Find & Replace** and **5J — Drag & Drop Image Upload** are actively being implemented. Tasks 5B (Version History) and 5F (Share by Link) are complete and shipped.
 
 ---
 
@@ -750,7 +752,7 @@ Add a `Ctrl+Enter` / `F11` button to the toolbar with a focus icon. Update the k
 
 ## 5B. Version History / Snapshots
 
-**Category:** Productivity  |  **Effort:** ~3 days  |  **Difficulty:** Medium
+**Category:** Productivity  |  **Effort:** ~3 days  |  **Difficulty:** Medium  |  **Status:** ✅ Done
 
 ### What it is
 The app automatically saves a snapshot of the document every 5 minutes (and on manual Ctrl+S) into IndexedDB. A "History" panel in the sidebar shows a timeline of snapshots. Clicking any snapshot shows a diff view and lets the user restore that version.
@@ -908,7 +910,7 @@ Add a clock/history icon button to the top toolbar. Clicking toggles the History
 
 ## 5C. Find & Replace
 
-**Category:** Productivity  |  **Effort:** ~1 day  |  **Difficulty:** Easy
+**Category:** Productivity  |  **Effort:** ~1 day  |  **Difficulty:** Easy  |  **Status:** 🚧 In Progress
 
 ### What it is
 `Ctrl+F` opens a floating search bar at the top of the editor pane. It highlights all matches in the CodeMirror editor. `Ctrl+H` expands to show a replace field. Navigate between matches with Enter / Shift+Enter.
@@ -1251,7 +1253,7 @@ case 'CLEAR_SUGGESTED_TITLE':
 
 ## 5F. Share by Link (Read-Only)
 
-**Category:** Sharing  |  **Effort:** ~1 day  |  **Difficulty:** Easy
+**Category:** Sharing  |  **Effort:** ~1 day  |  **Difficulty:** Easy  |  **Status:** ✅ Done
 
 ### What it is
 A "Share" button generates a URL that encodes the document content as a Base64 URL parameter. Anyone opening the URL sees the rendered Markdown preview — no login, no backend, no database. Documents under ~8KB work perfectly. Larger documents get a warning.
@@ -1939,7 +1941,7 @@ When a template is selected, use the template label as the initial document titl
 
 ## 5J. Drag & Drop Image Upload
 
-**Category:** UX  |  **Effort:** ~2 days  |  **Difficulty:** Medium
+**Category:** UX  |  **Effort:** ~2 days  |  **Difficulty:** Medium  |  **Status:** 🚧 In Progress
 
 ### What it is
 Drag any image file from the desktop and drop it onto the editor pane. The image is read as a Base64 data URI using the FileReader API and inserted at the cursor position as a Markdown image tag: `![filename](data:image/png;base64,...)`. Works entirely in the browser — no upload server.

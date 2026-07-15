@@ -195,7 +195,7 @@ export function HistoryPanel({
                   {isExpanded && (
                     <div className="snapshot-detail">
                       <div className="snapshot-detail-header">
-                        <span>Line Diff (Snapshot vs. Editor)</span>
+                        <span>Line Diff (vs. Previous Version)</span>
                         <button
                           className="snapshot-restore-btn"
                           onClick={() => handleRestore(snap)}
@@ -205,7 +205,15 @@ export function HistoryPanel({
                       </div>
                       <div className="diff-container">
                         <pre className="diff-viewer">
-                          {computeDiff(snap.content, state.markdown).map((line, index) => (
+                          {(() => {
+                            const snapIdx = snapshots.findIndex((s) => s.id === snap.id);
+                            const prevSnap =
+                              snapIdx !== -1 && snapIdx + 1 < snapshots.length
+                                ? snapshots[snapIdx + 1]
+                                : null;
+                            const oldContent = prevSnap ? prevSnap.content : '';
+                            return computeDiff(oldContent, snap.content);
+                          })().map((line, index) => (
                             <div key={index} className={`diff-line ${line.type}`}>
                               <span className="diff-indicator">
                                 {line.type === 'added'

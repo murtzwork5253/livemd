@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror';
+import { openSearchPanel } from '@codemirror/search';
 import './Toolbar.css';
 
 interface ToolbarProps {
@@ -7,6 +8,13 @@ interface ToolbarProps {
 }
 
 export function Toolbar({ editorRef }: ToolbarProps) {
+  const handleSearch = () => {
+    const view = editorRef.current?.view;
+    if (view) {
+      openSearchPanel(view);
+    }
+  };
+
   const handleFormat = (type: string) => {
     const view = editorRef.current?.view;
     if (!view) return;
@@ -156,6 +164,21 @@ export function Toolbar({ editorRef }: ToolbarProps) {
       <button onClick={() => handleFormat('quote')} title="Quote">
         <svg viewBox="0 0 24 24" className="toolbar-icon">
           <path d="M16 13a4 4 0 0 1-4-4V5h4v4h-2a2 2 0 0 0 2 2zM8 13A4 4 0 0 1 4 9V5h4v4H6a2 2 0 0 0 2 2z" />
+        </svg>
+      </button>
+      <div className="toolbar-divider" />
+      <button onClick={handleSearch} title="Find & Replace (Ctrl+F)">
+        <svg
+          viewBox="0 0 24 24"
+          className="toolbar-icon"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
       </button>
     </div>
