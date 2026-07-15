@@ -15,6 +15,7 @@ import { ShareModal } from './components/ShareModal/ShareModal';
 import { useVersionHistory } from './hooks/useVersionHistory';
 import { HistoryPanel } from './components/HistoryPanel/HistoryPanel';
 import { SettingsModal } from './components/SettingsModal/SettingsModal';
+import { TemplateModal } from './components/TemplateModal/TemplateModal';
 import './App.css';
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
   const sharedDocRef = useRef<{ title: string; content: string } | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const { createSnapshot } = useVersionHistory();
 
   useEffect(() => {
@@ -404,7 +406,7 @@ export default function App() {
                 </p>
                 <button
                   className="create-first-doc-btn"
-                  onClick={() => createDoc('Untitled Document')}
+                  onClick={() => setIsTemplateModalOpen(true)}
                   aria-label="Create your first document"
                 >
                   <svg
@@ -496,6 +498,19 @@ export default function App() {
         }
       />
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      {isTemplateModalOpen && (
+        <TemplateModal
+          onSelect={async (template) => {
+            await createDoc(template.getTitle(), template.getContent());
+            setIsTemplateModalOpen(false);
+          }}
+          onStartBlank={async () => {
+            await createDoc('Untitled Document');
+            setIsTemplateModalOpen(false);
+          }}
+          onClose={() => setIsTemplateModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
