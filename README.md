@@ -1,6 +1,6 @@
 # LiveMD — Live Markdown Editor
 
-> A production-grade, split-pane Markdown editor built with React 19, TypeScript, and Vite. Features live GitHub-flavored preview, CodeMirror syntax highlighting, IndexedDB multi-document management, automatic saving, backend-free document sharing via compressed links, and full version history with a visual diff viewer.
+> A production-grade, split-pane Markdown editor built with React 19, TypeScript, and Vite. Features live GitHub-flavored preview, CodeMirror syntax highlighting, IndexedDB multi-document management, automatic saving, starter templates, tags with filtering, ranked full-text search, adjustable reading typography, backend-free document sharing via compressed links, and full version history with a visual diff viewer.
 
 ---
 
@@ -14,6 +14,10 @@ LiveMD is designed around a **Dark Editorial / Developer Tool** aesthetic (VS Co
 
 - **Split-Pane Editing & Live Preview:** Real-time GitHub-flavored Markdown rendering (`remark-gfm`) with syntax highlighting powered by CodeMirror 6 and highlighted code blocks (`rehype-highlight`). Drag the divider to resize panes.
 - **Multi-Document Support:** Create, rename, search, and delete documents stored locally on your device via **IndexedDB** (`idb`), with schema migrations handled across database versions.
+- **Starter Templates:** Kick off a new document from a template gallery — blog post, README, meeting notes, technical spec, daily journal, and API documentation — each pre-filled with realistic, date-aware content.
+- **Tags & Tag Filtering:** Organize documents with inline hashtag-style tags (type to add, `Enter`/`,` to commit, `Backspace` to remove). Click a tag to filter the sidebar to matching documents.
+- **Ranked Search:** Full-text search across titles, tags, and content with relevance ranking — title matches outrank tag matches, which outrank content matches — and an `updatedAt` tie-breaker.
+- **Adjustable Reading Typography:** A typography panel lets you tune the preview's font family (serif / sans / mono), font size, line height, and column width; preferences persist across reloads.
 - **Autosave & Save Status:** Edits are debounced and saved automatically in the background, with a status bar showing word count, estimated read time, and last-saved time.
 - **Version History & Diff Viewer:** Automatic snapshots every 5 minutes plus a snapshot on every manual save. Browse past versions in a side panel, compare them with a **line- and word-level diff viewer**, and restore any version (a safety snapshot is taken automatically before a restore). History is pruned to the 50 most recent snapshots per document to bound storage.
 - **Share by Link (No Backend):** Documents are serialized, **gzip-compressed via the browser `CompressionStream` API**, and Base64-encoded directly into a shareable URL — no server required. Opening a shared link shows a read-only preview with an **"Edit Copy"** action to fork it into your own local library.
@@ -104,11 +108,14 @@ src/
 ├── components/
 │   ├── Editor/            # CodeMirror wrapper
 │   ├── Preview/           # ReactMarkdown renderer + Error Boundary
-│   ├── Sidebar/           # Collapsible document list with search
+│   ├── Sidebar/           # Collapsible document list with search + tag filter
 │   ├── StatusBar/         # Word count, read time, autosave indicator
 │   ├── Toolbar/           # Markdown formatting action buttons
 │   ├── TableOfContents/   # Heading outline with click-to-scroll
 │   ├── HistoryPanel/      # Version history browser + diff viewer
+│   ├── TemplateModal/     # Starter-template gallery for new documents
+│   ├── TagInput/          # Inline tag entry with add/remove pills
+│   ├── TypographyPanel/   # Reading font, size, line-height, width controls
 │   ├── ShareModal/        # Compressed share-link generation
 │   ├── ExportModal/       # Markdown / HTML / PDF export picker
 │   ├── SettingsModal/     # Theme + keyboard shortcut reference
@@ -117,7 +124,8 @@ src/
 ├── hooks/                 # useAutosave, useDebounce, useDocuments,
 │                          #   useVersionHistory, useKeyboardShortcuts, useWordCount
 ├── lib/                   # db (IndexedDB schema/migrations), export,
-│                          #   shareLink (compression), diff, imageUpload, markdownHelpers
+│                          #   shareLink (compression), diff, search (ranking),
+│                          #   templates, imageUpload, markdownHelpers
 ├── styles/                # Global variables, typography tokens, light/dark themes
 ├── App.tsx                # Main workspace coordinator
 └── main.tsx               # DOM root mounter
@@ -125,7 +133,7 @@ src/
 
 ### State Management
 
-Application state (documents list, active document, view mode, theme, snapshots, shared-view flag) is managed through a single unified React Context + `useReducer` (`markdownReducer`). Theme and view-mode preferences are mirrored to `localStorage` so they persist across reloads, while document and snapshot data live in IndexedDB.
+Application state (documents list, active document, view mode, theme, snapshots, shared-view flag, reading settings, search query, and active tag filter) is managed through a single unified React Context + `useReducer` (`markdownReducer`). Theme, view-mode, and reading-typography preferences are mirrored to `localStorage` so they persist across reloads, while document and snapshot data live in IndexedDB (currently schema version 3).
 
 ### How Share-by-Link Works
 
@@ -139,4 +147,4 @@ There is no server. When you share a document, its `{ title, content }` payload 
 
 ## 🧪 Testing
 
-Core logic is covered by [Vitest](https://vitest.dev/) unit tests under `tests/`, including the state reducer, autosave/debounce hooks, word count, export helpers, the diff engine, share-link encode/decode, and the IndexedDB layer. Run them with `npm run test`.
+Core logic is covered by [Vitest](https://vitest.dev/) unit tests under `tests/`, including the state reducer, autosave/debounce/keyboard-shortcut/word-count hooks, export helpers, the diff engine, share-link encode/decode, the ranked search, the template library, markdown helpers, and the IndexedDB layer. Run them with `npm run test`.
