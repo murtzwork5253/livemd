@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { markdown } from '@codemirror/lang-markdown';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { search, searchKeymap } from '@codemirror/search';
 import { keymap } from '@codemirror/view';
 import { useMarkdown } from '../../context/MarkdownContext';
+import { useToast } from '../../context/ToastContext';
 import { StatusBar } from '../StatusBar/StatusBar';
 import { fileToMarkdown, insertAtCursor } from '../../lib/imageUpload';
 import { TagInput } from '../TagInput/TagInput';
@@ -17,10 +18,9 @@ interface EditorPaneProps {
 
 export function EditorPane({ editorRef }: EditorPaneProps) {
   const { state, dispatch } = useMarkdown();
+  const { showToast } = useToast();
   const [cursor, setCursor] = useState({ line: 1, col: 1 });
   const [isDragOver, setIsDragOver] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const toastTimeoutRef = useRef<number | null>(null);
 
   const { renameDoc, updateDocTags } = useDocuments();
   const activeDoc = state.documents.find((d) => d.id === state.activeDocId);
@@ -31,24 +31,6 @@ export function EditorPane({ editorRef }: EditorPaneProps) {
     setPrevDocId(activeDoc.id);
     setLocalTitle(activeDoc.title);
   }
-
-  const showToast = (message: string) => {
-    if (toastTimeoutRef.current) {
-      window.clearTimeout(toastTimeoutRef.current);
-    }
-    setToastMessage(message);
-    toastTimeoutRef.current = window.setTimeout(() => {
-      setToastMessage(null);
-    }, 5000);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        window.clearTimeout(toastTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -62,21 +44,25 @@ export function EditorPane({ editorRef }: EditorPaneProps) {
   };
 
   const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
     setIsDragOver(false);
     if (state.documents.length === 0) return;
 
-    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
+    // Only handle image files here. Other file types (e.g. .md/.txt) fall through
+    // to the editor's native text-drop handling, so don't preventDefault or toast.
+    const images = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
+    if (images.length === 0) return;
 
+    e.preventDefault();
     const view = editorRef.current?.view;
     if (!view) return;
 
-    for (const file of files) {
+    // fileToMarkdown validates size and rejects with a user-facing message.
+    for (const file of images) {
       try {
         const markdownTag = await fileToMarkdown(file, showToast);
         insertAtCursor(view, markdownTag);
       } catch (err) {
-        console.error('Failed to process dropped image:', err);
+        showToast(err instanceof Error ? err.message : 'Could not add image.', 'error');
       }
     }
   };
@@ -99,7 +85,7 @@ export function EditorPane({ editorRef }: EditorPaneProps) {
           const markdownTag = await fileToMarkdown(file, showToast);
           insertAtCursor(view, markdownTag);
         } catch (err) {
-          console.error('Failed to process pasted image:', err);
+          showToast(err instanceof Error ? err.message : 'Could not add image.', 'error');
         }
       }
     }
@@ -175,31 +161,6 @@ export function EditorPane({ editorRef }: EditorPaneProps) {
           }}
           style={{ flex: 1, overflow: 'hidden' }}
         />
-        {toastMessage && (
-          <div className="editor-toast" role="alert" aria-live="assertive">
-            <svg
-              viewBox="0 0 24 24"
-              className="toast-icon"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <span className="toast-text">{toastMessage}</span>
-            <button
-              className="toast-close-btn"
-              onClick={() => setToastMessage(null)}
-              aria-label="Close warning alert"
-            >
-              ✕
-            </button>
-          </div>
-        )}
       </div>
       <StatusBar cursor={cursor} />
     </div>

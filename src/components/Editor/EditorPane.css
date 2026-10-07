@@ -159,51 +159,6 @@
   z-index: 5;
 }
 
-.editor-toast {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: min(90%, 460px);
-  padding: 10px 12px;
-  background-color: var(--bg-elevated);
-  color: var(--text-primary);
-  border: 1px solid var(--accent-orange);
-  border-radius: 8px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
-  font-size: 13px;
-  z-index: 10;
-}
-
-.editor-toast .toast-icon {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  color: var(--accent-orange);
-}
-
-.editor-toast .toast-text {
-  flex: 1;
-  line-height: 1.4;
-}
-
-.editor-toast .toast-close-btn {
-  flex-shrink: 0;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 0 2px;
-}
-
-.editor-toast .toast-close-btn:hover {
-  color: var(--text-primary);
-}
-
 /* Editor Metadata Bar (Document Title & TagInput) */
 .editor-metadata-bar {
   display: flex;

@@ -1,5 +1,6 @@
 import { useMarkdown } from '../context/MarkdownContext';
 import { saveDocument, getAllDocuments, deleteDocument, getDocument } from '../lib/db';
+import { ensurePersistenceRequested } from '../lib/storage';
 import { nanoid } from 'nanoid';
 import type { Document } from '../context/markdownReducer';
 
@@ -81,6 +82,11 @@ export function useDocuments() {
       if (window.innerWidth < 768 && state.sidebarOpen) {
         dispatch({ type: 'TOGGLE_SIDEBAR' });
       }
+
+      // Creating a document is the moment persistence is worth asking for: the
+      // user now has data to lose, and any browser prompt arrives with context.
+      // Fire-and-forget — a denied request must not block document creation.
+      void ensurePersistenceRequested();
     } catch (err) {
       console.error('Failed to create document:', err);
     }

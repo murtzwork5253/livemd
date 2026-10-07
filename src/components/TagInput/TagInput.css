@@ -58,3 +58,10 @@
   border-color: var(--border);
   background-color: var(--bg-primary);
 }
+
+.tag-input-error {
+  flex-basis: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: var(--accent-red, #f85149);
+}

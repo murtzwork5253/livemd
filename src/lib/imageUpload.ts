@@ -1,11 +1,19 @@
 import type { EditorView } from '@codemirror/view';
+import { validateImageFile } from './validation';
 
 /**
  * Converts an image file to a base64 Markdown image tag.
+ * Rejects any file that fails the strict image schema (must be an `image/*`
+ * MIME type within the size limit) before reading it.
  * Calls onLargeImage callback if file size exceeds 500KB.
  */
 export function fileToMarkdown(file: File, onLargeImage?: (msg: string) => void): Promise<string> {
   return new Promise((resolve, reject) => {
+    const check = validateImageFile(file);
+    if (!check.ok) {
+      reject(new Error(check.error));
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (e) => {
       const base64 = e.target?.result as string;

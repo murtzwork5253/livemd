@@ -1,3 +1,5 @@
+import { validateReadingSettings, validateTheme, validateViewMode } from '../lib/validation';
+
 export type Document = {
   id: string;
   title: string;
@@ -59,12 +61,33 @@ export type MarkdownAction =
 
 const isBrowser = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
 
+const DEFAULT_READING_SETTINGS: ReadingSettings = {
+  fontSize: 17,
+  lineWidth: 680,
+  fontFamily: 'serif',
+  lineHeight: 1.8,
+};
+
+/** Parses persisted reading settings, validating against the strict schema. */
+function loadReadingSettings(): ReadingSettings {
+  if (!isBrowser) return DEFAULT_READING_SETTINGS;
+  const saved = localStorage.getItem('livemd-readingsettings');
+  if (!saved) return DEFAULT_READING_SETTINGS;
+  try {
+    return validateReadingSettings(JSON.parse(saved), DEFAULT_READING_SETTINGS);
+  } catch {
+    return DEFAULT_READING_SETTINGS;
+  }
+}
+
 export const initialState: MarkdownState = {
   markdown: isBrowser
     ? localStorage.getItem('livemd-markdown') || '# Welcome to LiveMD\n\nStart writing...'
     : '# Welcome to LiveMD\n\nStart writing...',
-  theme: isBrowser ? (localStorage.getItem('livemd-theme') as Theme) || 'dark' : 'dark',
-  viewMode: isBrowser ? (localStorage.getItem('livemd-viewmode') as ViewMode) || 'split' : 'split',
+  theme: isBrowser ? validateTheme(localStorage.getItem('livemd-theme'), 'dark') : 'dark',
+  viewMode: isBrowser
+    ? validateViewMode(localStorage.getItem('livemd-viewmode'), 'split')
+    : 'split',
   sidebarOpen: false,
   activeDocId: null,
   documents: [],
@@ -72,20 +95,7 @@ export const initialState: MarkdownState = {
   lastSaved: null,
   isLoading: true,
   isSharedView: false,
-  readingSettings: (() => {
-    if (!isBrowser) {
-      return { fontSize: 17, lineWidth: 680, fontFamily: 'serif', lineHeight: 1.8 };
-    }
-    const saved = localStorage.getItem('livemd-readingsettings');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        // Fallback
-      }
-    }
-    return { fontSize: 17, lineWidth: 680, fontFamily: 'serif', lineHeight: 1.8 };
-  })() as ReadingSettings,
+  readingSettings: loadReadingSettings(),
   searchQuery: '',
   activeTagFilter: null,
 };

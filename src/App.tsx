@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { useMarkdown } from './context/MarkdownContext';
+import { useToast } from './context/ToastContext';
 import { EditorPane } from './components/Editor/EditorPane';
 import { PreviewPane } from './components/Preview/PreviewPane';
 import { Toolbar } from './components/Toolbar/Toolbar';
@@ -11,6 +12,7 @@ import { Sidebar } from './components/Sidebar/Sidebar';
 import { useDocuments } from './hooks/useDocuments';
 import { saveDocument, getDocument, getAllDocuments } from './lib/db';
 import { getSharedDocFromURL } from './lib/shareLink';
+import { getStorageUsage, STORAGE_WARNING_PERCENT } from './lib/storage';
 import { ShareModal } from './components/ShareModal/ShareModal';
 import { useVersionHistory } from './hooks/useVersionHistory';
 import { HistoryPanel } from './components/HistoryPanel/HistoryPanel';
@@ -20,6 +22,7 @@ import './App.css';
 
 export default function App() {
   const { state, dispatch } = useMarkdown();
+  const { showToast } = useToast();
   const editorRef = useRef<ReactCodeMirrorRef>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
@@ -35,12 +38,23 @@ export default function App() {
   useEffect(() => {
     const initDocsAndShare = async () => {
       await loadAllDocs();
+      const hasShareParam = new URLSearchParams(window.location.search).has('share');
       const shared = await getSharedDocFromURL();
       if (shared) {
         sharedDocRef.current = shared;
         dispatch({ type: 'SET_MARKDOWN', payload: shared.content });
         dispatch({ type: 'SET_VIEW_MODE', payload: 'preview' });
         dispatch({ type: 'SET_SHARED_VIEW', payload: true });
+      } else if (hasShareParam) {
+        // A share link was present but failed validation/decoding — tell the user.
+        showToast('This shared link is invalid or could not be opened.', 'error');
+      }
+
+      // Warn once per session when the origin is close to its storage quota —
+      // writes start failing silently past it, and documents are the only copy.
+      const storage = await getStorageUsage();
+      if (storage && storage.percentUsed >= STORAGE_WARNING_PERCENT) {
+        showToast('Browser storage is nearly full. Download a backup from Settings.', 'warning');
       }
     };
     initDocsAndShare();

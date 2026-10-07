@@ -1,27 +1,39 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { exportMarkdown, exportHTML, exportPDF } from '../../src/lib/export';
+import {
+  exportMarkdown,
+  exportHTML,
+  exportPDFViaPrint,
+  sanitizeExportFilename,
+} from '../../src/lib/export';
 
-import html2pdf from 'html2pdf.js';
+describe('sanitizeExportFilename', () => {
+  it('keeps a normal name unchanged', () => {
+    expect(sanitizeExportFilename('my-report_v2')).toBe('my-report_v2');
+  });
 
-vi.mock('html2pdf.js', () => {
-  const saveMock = vi.fn().mockResolvedValue(undefined);
-  const setMock = vi.fn();
-  const fromMock = vi.fn();
+  it('strips filesystem-illegal characters', () => {
+    expect(sanitizeExportFilename('a/b\\c:d*e?f"g<h>i|j')).toBe('abcdefghij');
+  });
 
-  const instance = {
-    from: fromMock,
-    set: setMock,
-    save: saveMock,
-  };
+  it('strips C0 control characters', () => {
+    expect(sanitizeExportFilename(`a${String.fromCharCode(0)}b${String.fromCharCode(31)}c`)).toBe(
+      'abc',
+    );
+  });
 
-  fromMock.mockReturnValue(instance);
-  setMock.mockReturnValue(instance);
+  it('collapses whitespace and trims', () => {
+    expect(sanitizeExportFilename('  hello   world  ')).toBe('hello world');
+  });
 
-  const html2pdfMock = vi.fn().mockReturnValue(instance);
+  it('caps length at 200 characters', () => {
+    expect(sanitizeExportFilename('x'.repeat(500))).toHaveLength(200);
+  });
 
-  return {
-    default: html2pdfMock,
-  };
+  it('falls back to "document" when nothing usable remains', () => {
+    expect(sanitizeExportFilename('   ')).toBe('document');
+    expect(sanitizeExportFilename('/\\:*?')).toBe('document');
+    expect(sanitizeExportFilename('')).toBe('document');
+  });
 });
 
 describe('exportMarkdown', () => {
@@ -172,48 +184,102 @@ describe('exportHTML', () => {
   });
 });
 
-describe('exportPDF', () => {
+describe('exportPDFViaPrint', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let fakeIframe: any;
+  let printMock: ReturnType<typeof vi.fn>;
+  let focusMock: ReturnType<typeof vi.fn>;
+  let removeMock: ReturnType<typeof vi.fn>;
+  let appendChildMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.useFakeTimers();
+    printMock = vi.fn();
+    focusMock = vi.fn();
+    removeMock = vi.fn();
+    appendChildMock = vi.fn();
+
+    const fakeWindow = {
+      focus: focusMock,
+      print: printMock,
+      onafterprint: null as null | (() => void),
+      document: {
+        // `fonts.ready` resolves immediately so the print path runs.
+        fonts: { ready: Promise.resolve() },
+      },
+    };
+
+    fakeIframe = {
+      setAttribute: vi.fn(),
+      style: {},
+      remove: removeMock,
+      onload: null as null | (() => void),
+      // Track the written document so assertions can inspect it.
+      _srcdoc: '',
+      set srcdoc(value: string) {
+        this._srcdoc = value;
+      },
+      get srcdoc() {
+        return this._srcdoc;
+      },
+      contentWindow: fakeWindow,
+    };
+
+    const mockDocument = {
+      createElement: vi.fn().mockReturnValue(fakeIframe),
+      body: { appendChild: appendChildMock },
+    };
+
+    Object.defineProperty(globalThis, 'document', {
+      value: mockDocument,
+      writable: true,
+      configurable: true,
+    });
   });
 
-  it('should call html2pdf with the correct HTML string, options, and trigger save', async () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (globalThis as any).document;
+  });
+
+  it('builds a print document, appends an iframe, and prints once loaded', async () => {
     const htmlContent = '<h1>Test content</h1>';
-    const filename = 'my-custom-doc.pdf';
 
-    await exportPDF(htmlContent, filename);
+    exportPDFViaPrint(htmlContent, 'my-report');
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const html2pdfMock = html2pdf as any;
-    expect(html2pdfMock).toHaveBeenCalled();
+    // The iframe is appended and its srcdoc contains the wrapped content.
+    expect(document.createElement).toHaveBeenCalledWith('iframe');
+    expect(appendChildMock).toHaveBeenCalledWith(fakeIframe);
+    expect(fakeIframe.srcdoc).toContain('<!DOCTYPE html>');
+    expect(fakeIframe.srcdoc).toContain('<h1>Test content</h1>');
+    // The title (suggested filename) is set from the provided name.
+    expect(fakeIframe.srcdoc).toContain('<title>my-report</title>');
+    // Print-fidelity rules are present.
+    expect(fakeIframe.srcdoc).toContain('@page');
+    expect(fakeIframe.srcdoc).toContain('print-color-adjust: exact');
 
-    const instance = html2pdfMock.mock.results[0].value;
-    expect(instance.from).toHaveBeenCalledWith(expect.stringContaining('<h1>Test content</h1>'));
-    expect(instance.from).toHaveBeenCalledWith(expect.stringContaining('<!DOCTYPE html>'));
-    expect(instance.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        filename: filename,
-        jsPDF: expect.objectContaining({
-          format: 'letter',
-          orientation: 'portrait',
-        }),
-      })
-    );
-    expect(instance.save).toHaveBeenCalled();
+    // Simulate the iframe finishing load, then flush the fonts.ready promise.
+    fakeIframe.onload();
+    await Promise.resolve();
+
+    expect(focusMock).toHaveBeenCalled();
+    expect(printMock).toHaveBeenCalled();
+
+    // Cleanup runs after the dialog closes.
+    fakeIframe.contentWindow.onafterprint();
+    expect(removeMock).toHaveBeenCalled();
   });
 
-  it('should use default filename document.pdf when none is specified', async () => {
-    const htmlContent = '<p>plain text</p>';
+  it('defaults the document title to "document" when the title is blank', async () => {
+    exportPDFViaPrint('<p>hello</p>', '   ');
 
-    await exportPDF(htmlContent);
+    expect(fakeIframe.srcdoc).toContain('<title>document</title>');
+  });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const html2pdfMock = html2pdf as any;
-    const instance = html2pdfMock.mock.results[0].value;
-    expect(instance.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        filename: 'document.pdf',
-      })
-    );
+  it('escapes HTML-significant characters in the title', async () => {
+    exportPDFViaPrint('<p>hello</p>', 'a<b>&"c');
+
+    expect(fakeIframe.srcdoc).toContain('<title>a&lt;b&gt;&amp;&quot;c</title>');
   });
 });

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useMarkdown } from '../../context/MarkdownContext';
+import { DataBackup } from '../DataBackup/DataBackup';
 import './SettingsModal.css';
 
 interface SettingsModalProps {
@@ -109,6 +110,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </button>
             </div>
           </section>
+
+          <DataBackup />
 
           <section className="settings-section">
             <h3>Keyboard Shortcuts</h3>

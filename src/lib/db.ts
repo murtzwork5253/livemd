@@ -132,6 +132,34 @@ export async function pruneSnapshots(docId: string, keep = 50): Promise<void> {
 }
 
 /**
+ * Retrieves every snapshot across all documents.
+ * Used by the backup exporter so version history survives a restore.
+ * @returns A Promise resolving to an array of Snapshots.
+ */
+export async function getAllSnapshots(): Promise<Snapshot[]> {
+  const db = await dbPromise;
+  return db.getAll(SNAPSHOTS_STORE_NAME);
+}
+
+/**
+ * Writes documents and snapshots in a single read-write transaction spanning
+ * both stores, so a failed restore cannot leave a half-imported library behind.
+ * @param documents The documents to write.
+ * @param snapshots The snapshots to write.
+ */
+export async function bulkPut(documents: Document[], snapshots: Snapshot[]): Promise<void> {
+  const db = await dbPromise;
+  const tx = db.transaction([STORE_NAME, SNAPSHOTS_STORE_NAME], 'readwrite');
+  const docStore = tx.objectStore(STORE_NAME);
+  const snapStore = tx.objectStore(SNAPSHOTS_STORE_NAME);
+  await Promise.all([
+    ...documents.map((doc) => docStore.put(doc)),
+    ...snapshots.map((snapshot) => snapStore.put(snapshot)),
+  ]);
+  await tx.done;
+}
+
+/**
  * Retrieves all documents containing a specific tag from IndexedDB.
  * @param tag The tag string.
  * @returns A Promise resolving to an array of Documents.

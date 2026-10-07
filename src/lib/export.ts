@@ -1,7 +1,52 @@
 /**
  * Utility functions for exporting markdown content to different formats.
  */
-import html2pdf from 'html2pdf.js';
+
+/** Max length for a user-supplied export filename base (before any extension). */
+const FILENAME_MAX_CHARS = 200;
+
+/** Characters illegal in filenames on Windows/macOS/Linux. */
+const ILLEGAL_FILENAME_CHARS = /[<>:"/\\|?*]/g;
+
+/**
+ * Normalizes a user-supplied export filename into a safe base name.
+ *
+ * This is first-party UI input used only as a local download name / document
+ * title, so we normalize (strip filesystem-illegal characters and C0 control
+ * codes, collapse whitespace, cap length) rather than rejecting outright.
+ * Falls back to `'document'` when nothing usable remains.
+ *
+ * @param name The raw filename from the input field.
+ * @returns A safe, non-empty base filename with no extension enforced.
+ */
+export function sanitizeExportFilename(name: string): string {
+  const cleaned = Array.from(name)
+    // Drop C0 control characters (code points 0–31) without embedding raw
+    // control bytes in this source file.
+    .filter((ch) => ch.codePointAt(0)! > 31)
+    .join('')
+    .replace(ILLEGAL_FILENAME_CHARS, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, FILENAME_MAX_CHARS)
+    .trim();
+  return cleaned || 'document';
+}
+
+/**
+ * Escapes the five HTML-significant characters so a plain string can be safely
+ * embedded inside markup (used for the document `<title>`).
+ * @param value The raw string to escape.
+ * @returns The escaped string.
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 /**
  * Exports raw markdown text as a downloadable file.
@@ -129,28 +174,45 @@ export function exportHTML(htmlContent: string, filename: string = 'document.htm
 }
 
 /**
- * Exports HTML content as a PDF file.
- * @param htmlContent The rendered HTML content.
- * @param filename The name of the PDF file to save (defaults to 'document.pdf').
- * @returns A Promise that resolves when the PDF has been saved.
+ * Exports rendered HTML content as a PDF using the browser's native print
+ * engine.
+ *
+ * The HTML is rendered into an isolated, off-screen `<iframe>` styled for print
+ * and then sent to `window.print()`, letting the user choose "Save as PDF".
+ * Because the browser's own layout engine produces the PDF, every character is
+ * preserved as real, selectable text — including Unicode, emoji, code blocks,
+ * and tables — rather than being rasterized into an image.
+ *
+ * The print dialog's default filename follows the document `<title>`, so the
+ * user's chosen name is used as the suggested filename in Chromium browsers.
+ *
+ * @param htmlContent The rendered HTML content from the preview.
+ * @param title The document title, used as the suggested PDF filename
+ *   (defaults to 'document').
  */
-export async function exportPDF(
-  htmlContent: string,
-  filename: string = 'document.pdf',
-): Promise<void> {
+export function exportPDFViaPrint(htmlContent: string, title: string = 'document'): void {
+  const printTitle = title.trim() || 'document';
   const fullHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Exported PDF Document</title>
+  <title>${escapeHtml(printTitle)}</title>
   <style>
+    @page {
+      size: letter;
+      margin: 0.5in;
+    }
+    html, body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
       font-size: 14px;
       line-height: 1.5;
       word-wrap: break-word;
-      padding: 1.5rem;
+      margin: 0;
       color: #1f2328;
       background-color: #ffffff;
     }
@@ -234,13 +296,42 @@ export async function exportPDF(
 </body>
 </html>`;
 
-  const options = {
-    margin: [0.5, 0.5, 0.5, 0.5] as [number, number, number, number],
-    filename: filename,
-    image: { type: 'jpeg' as const, quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false },
-    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as const },
+  const iframe = document.createElement('iframe');
+  iframe.setAttribute('aria-hidden', 'true');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+
+  const cleanup = () => iframe.remove();
+
+  iframe.onload = () => {
+    const frameWindow = iframe.contentWindow;
+    if (!frameWindow) {
+      cleanup();
+      return;
+    }
+
+    const print = () => {
+      frameWindow.focus();
+      // `onafterprint` fires once the dialog closes (saved or cancelled).
+      frameWindow.onafterprint = cleanup;
+      frameWindow.print();
+      // Fallback cleanup for browsers that never fire `onafterprint`.
+      setTimeout(cleanup, 60000);
+    };
+
+    // Wait for fonts to load so glyphs are not substituted in the output.
+    const frameFonts = frameWindow.document.fonts;
+    if (frameFonts?.ready) {
+      frameFonts.ready.then(print, print);
+    } else {
+      print();
+    }
   };
 
-  await html2pdf().from(fullHtml).set(options).save();
+  document.body.appendChild(iframe);
+  iframe.srcdoc = fullHtml;
 }

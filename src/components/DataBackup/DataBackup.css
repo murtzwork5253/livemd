@@ -1,0 +1,128 @@
+.storage-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-orange);
+  border-radius: 8px;
+}
+
+.storage-status.protected {
+  border-left-color: var(--accent-green);
+}
+
+.storage-status-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.storage-status-label {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.storage-status-hint {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.storage-usage {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.storage-usage-bar {
+  height: 6px;
+  background-color: var(--bg-elevated);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.storage-usage-fill {
+  height: 100%;
+  background-color: var(--accent-blue);
+  border-radius: 999px;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.storage-usage-fill.warning {
+  background-color: var(--accent-orange);
+}
+
+.storage-usage-text {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.backup-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.storage-action-btn {
+  flex: 1;
+  padding: 10px 12px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.storage-action-btn:hover:not(:disabled) {
+  background-color: var(--bg-elevated);
+  border-color: var(--accent-blue);
+}
+
+.storage-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.storage-action-btn.primary {
+  flex: 0 0 auto;
+  border-color: var(--accent-orange);
+  color: var(--accent-orange);
+}
+
+.storage-action-btn.primary:hover:not(:disabled) {
+  border-color: var(--accent-orange);
+  background-color: var(--bg-elevated);
+}
+
+.backup-file-input {
+  display: none;
+}
+
+.backup-note {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+@media (max-width: 520px) {
+  .storage-status {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .backup-actions {
+    flex-direction: column;
+  }
+}

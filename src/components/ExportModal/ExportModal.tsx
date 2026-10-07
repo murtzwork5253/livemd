@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { exportMarkdown, exportHTML } from '../../lib/export';
+import {
+  exportMarkdown,
+  exportHTML,
+  exportPDFViaPrint,
+  sanitizeExportFilename,
+} from '../../lib/export';
 import './ExportModal.css';
 
 interface ExportModalProps {
@@ -37,7 +42,7 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  const [isExporting, setIsExporting] = useState<'markdown' | 'html' | null>(null);
+  const [isExporting, setIsExporting] = useState<'markdown' | 'html' | 'pdf' | null>(null);
 
   if (!isOpen) return null;
 
@@ -45,8 +50,8 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
     if (isExporting) return;
     setIsExporting('markdown');
     setTimeout(() => {
-      const trimmed = filename.trim() || 'document';
-      const finalFilename = trimmed.endsWith('.md') ? trimmed : `${trimmed}.md`;
+      const base = sanitizeExportFilename(filename);
+      const finalFilename = base.endsWith('.md') ? base : `${base}.md`;
       exportMarkdown(markdownContent, finalFilename);
       setIsExporting(null);
       onClose();
@@ -57,10 +62,23 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
     if (isExporting) return;
     setIsExporting('html');
     setTimeout(() => {
-      const trimmed = filename.trim() || 'document';
-      const finalFilename = trimmed.endsWith('.html') ? trimmed : `${trimmed}.html`;
+      const base = sanitizeExportFilename(filename);
+      const finalFilename = base.endsWith('.html') ? base : `${base}.html`;
       const htmlContent = hiddenPreviewRef.current?.innerHTML || '';
       exportHTML(htmlContent, finalFilename);
+      setIsExporting(null);
+      onClose();
+    }, 1000);
+  };
+
+  const handleExportPDF = () => {
+    if (isExporting) return;
+    setIsExporting('pdf');
+    setTimeout(() => {
+      // The browser appends `.pdf`, so strip any trailing extension the user typed.
+      const pdfTitle = sanitizeExportFilename(filename.replace(/\.pdf$/i, ''));
+      const htmlContent = hiddenPreviewRef.current?.innerHTML || '';
+      exportPDFViaPrint(htmlContent, pdfTitle);
       setIsExporting(null);
       onClose();
     }, 1000);
@@ -201,25 +219,47 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
               </div>
             </button>
 
-            <button className="export-option-card disabled" title="PDF Export coming soon" disabled>
+            <button
+              className={`export-option-card active ${isExporting !== null ? 'disabled' : ''}`}
+              onClick={handleExportPDF}
+              disabled={isExporting !== null}
+            >
               <div className="option-icon">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <path d="M9 15h2a2 2 0 0 0 0-4H9v8" />
-                  <path d="M13 11v8h2a4 4 0 0 0 0-8h-2z" />
-                </svg>
+                {isExporting === 'pdf' ? (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    className="spinner-icon"
+                    strokeLinecap="round"
+                  >
+                    <circle cx="12" cy="12" r="10" stroke="rgba(88, 166, 255, 0.15)" />
+                    <path d="M12 2a10 10 0 0 1 10 10" />
+                  </svg>
+                ) : (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <path d="M9 15h2a2 2 0 0 0 0-4H9v8" />
+                    <path d="M13 11v8h2a4 4 0 0 0 0-8h-2z" />
+                  </svg>
+                )}
               </div>
               <div className="option-details">
-                <h3>Export as PDF</h3>
-                <p>Download the print-optimized PDF (.pdf) (Coming Soon)</p>
+                <h3>Print / Save as PDF</h3>
+                <p>
+                  {isExporting === 'pdf'
+                    ? 'Opening print dialog...'
+                    : "Opens your browser's print dialog — choose 'Save as PDF' for selectable, high-fidelity output"}
+                </p>
               </div>
             </button>
           </div>

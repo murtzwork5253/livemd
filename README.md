@@ -26,8 +26,9 @@ LiveMD is designed around a **Dark Editorial / Developer Tool** aesthetic (VS Co
 - **Export Formats:** One-click download of documents to:
   - Raw Markdown source file (`.md`)
   - Styled, self-contained HTML file (`.html`)
-  - PDF (`.pdf`) via `html2pdf.js`, with page-break-aware styling
-- **Settings Panel:** Theme selection (light/dark) and a full keyboard-shortcut reference.
+  - PDF via the browser's native print engine ("Save as PDF") — real selectable text with full Unicode/emoji fidelity and page-break-aware styling
+- **Durable Storage & Full Backups:** Because IndexedDB is the only copy of your work, LiveMD asks the browser for **persistent storage** (exempting the origin from automatic eviction) the first time you create a document, shows how much of your storage quota is in use, and warns you when it's nearly full. A one-click **backup exports every document and its complete version history** to a single JSON file, and importing one restores them. Imports are **additive** — a record whose id collides with existing data is re-keyed rather than overwriting it, so a restore can never destroy what's already there.
+- **Settings Panel:** Theme selection (light/dark), data & backup controls, and a full keyboard-shortcut reference.
 - **Premium Loading & Empty States:** Animated skeleton shimmers load during database initialization, and a vector empty canvas is displayed if no documents remain.
 - **Robust Error Recovery:** Class-based React **Error Boundary** traps rendering or markdown syntax crashes inside the preview, recovering automatically as soon as the user corrects their input.
 - **Responsive Layout:** Adapts responsively down to mobile dimensions:
@@ -43,18 +44,18 @@ Speed up your writing workflow with editor hotkeys:
 
 `Ctrl` on Windows/Linux, `Cmd` on macOS.
 
-| Action | Shortcut | Result |
-| :--- | :--- | :--- |
-| **Bold** | `Ctrl + B` | `**selected text**` |
-| *Italic* | `Ctrl + I` | `*selected text*` |
-| ~~Strikethrough~~ | `Ctrl + Shift + X` | `~~selected text~~` |
-| `Inline code` | `` Ctrl + ` `` | `` `selected text` `` |
-| Insert link | `Ctrl + K` | `[selected text](url)` |
-| Save document | `Ctrl + S` | Immediate database write + snapshot |
-| Toggle sidebar | `Ctrl + Shift + B` (or `Ctrl + \`) | Show/hide document list |
-| Editor view | `Ctrl + Alt + 1` (or `Alt + 1`) | Editor-only layout |
-| Split view | `Ctrl + Alt + 2` (or `Alt + 2`) | Split editor/preview layout |
-| Preview view | `Ctrl + Alt + 3` (or `Alt + 3`) | Preview-only layout |
+| Action            | Shortcut                           | Result                              |
+| :---------------- | :--------------------------------- | :---------------------------------- |
+| **Bold**          | `Ctrl + B`                         | `**selected text**`                 |
+| _Italic_          | `Ctrl + I`                         | `*selected text*`                   |
+| ~~Strikethrough~~ | `Ctrl + Shift + X`                 | `~~selected text~~`                 |
+| `Inline code`     | `` Ctrl + ` ``                     | `` `selected text` ``               |
+| Insert link       | `Ctrl + K`                         | `[selected text](url)`              |
+| Save document     | `Ctrl + S`                         | Immediate database write + snapshot |
+| Toggle sidebar    | `Ctrl + Shift + B` (or `Ctrl + \`) | Show/hide document list             |
+| Editor view       | `Ctrl + Alt + 1` (or `Alt + 1`)    | Editor-only layout                  |
+| Split view        | `Ctrl + Alt + 2` (or `Alt + 2`)    | Split editor/preview layout         |
+| Preview view      | `Ctrl + Alt + 3` (or `Alt + 3`)    | Preview-only layout                 |
 
 ---
 
@@ -69,12 +70,14 @@ You need [Node.js](https://nodejs.org/) (version 18 or higher recommended) and n
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/your-username/livemd.git
    cd livemd
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
@@ -118,12 +121,15 @@ src/
 │   ├── TypographyPanel/   # Reading font, size, line-height, width controls
 │   ├── ShareModal/        # Compressed share-link generation
 │   ├── ExportModal/       # Markdown / HTML / PDF export picker
-│   ├── SettingsModal/     # Theme + keyboard shortcut reference
+│   ├── SettingsModal/     # Theme + data/backup + keyboard shortcut reference
+│   ├── DataBackup/        # Storage durability + backup export/import
+│   ├── Toast/             # Transient notification stack
 │   └── ConfirmModal/      # Reusable confirmation dialog
-├── context/               # App state (MarkdownContext + markdownReducer)
-├── hooks/                 # useAutosave, useDebounce, useDocuments,
+├── context/               # App state (MarkdownContext + markdownReducer), ToastContext
+├── hooks/                 # useAutosave, useDebounce, useDocuments, useStorageStatus,
 │                          #   useVersionHistory, useKeyboardShortcuts, useWordCount
-├── lib/                   # db (IndexedDB schema/migrations), export,
+├── lib/                   # db (IndexedDB schema/migrations), export, backup,
+│                          #   storage (persistence/quota), validation (strict schemas),
 │                          #   shareLink (compression), diff, search (ranking),
 │                          #   templates, imageUpload, markdownHelpers
 ├── styles/                # Global variables, typography tokens, light/dark themes
@@ -139,6 +145,20 @@ Application state (documents list, active document, view mode, theme, snapshots,
 
 There is no server. When you share a document, its `{ title, content }` payload is JSON-serialized, streamed through the browser's native `CompressionStream('gzip')`, Base64-encoded, and written to a `?share=` URL parameter (prefixed `v2:` for format versioning, with a legacy uncompressed fallback for backward compatibility). Opening such a URL reverses the process via `DecompressionStream` and renders a read-only preview.
 
+### Security Headers
+
+`netlify.toml` sets a Content-Security-Policy and companion headers on every response. Scripts are restricted to same-origin bundles (`index.html` carries no inline script); `object-src`, `base-uri`, `form-action`, and `frame-ancestors` are all `'none'`.
+
+Two directives are deliberately looser than the default, for reasons documented inline in the file: `style-src` allows `'unsafe-inline'` because React inline `style` attributes and the PDF-export `srcdoc` iframe both require it, and `img-src` allows `https:` because Markdown routinely references remote images. `Referrer-Policy: no-referrer` compensates for the latter — a share link carries the whole document in its query string, and without it any remote image would send that URL to a third-party host.
+
+Headers are set in `netlify.toml` rather than a `<meta>` tag so they apply to the deployed site only, leaving Vite's dev-server HMR websocket untouched.
+
+### Data Durability
+
+Browsers treat IndexedDB as best-effort storage by default: under disk pressure an origin can be evicted wholesale, taking every document with it. `lib/storage.ts` wraps the Storage Manager API to request the **persistent** bucket — asked for once, on first document creation, so any browser permission prompt arrives with obvious context rather than on a cold page load — and to report quota usage.
+
+`lib/backup.ts` serializes the entire library (documents plus every snapshot) into one JSON bundle. Restores validate each record against a strict schema in `lib/validation.ts` and skip anything that fails rather than coercing it into storage; surviving records are written through a single cross-store transaction, so a failed import cannot leave a half-restored library. Colliding ids are re-keyed (with snapshot references remapped to follow), making import purely additive.
+
 ### Version History
 
 `useVersionHistory` writes content snapshots to a dedicated IndexedDB object store — automatically every 5 minutes, and on each manual save — de-duplicating against the last stored content to avoid redundant writes. The `HistoryPanel` diffs versions using a hand-written line + word diff (`lib/diff.ts`) and can restore a prior version, taking a "Before restore" safety snapshot first.
@@ -147,4 +167,4 @@ There is no server. When you share a document, its `{ title, content }` payload 
 
 ## 🧪 Testing
 
-Core logic is covered by [Vitest](https://vitest.dev/) unit tests under `tests/`, including the state reducer, autosave/debounce/keyboard-shortcut/word-count hooks, export helpers, the diff engine, share-link encode/decode, the ranked search, the template library, markdown helpers, and the IndexedDB layer. Run them with `npm run test`.
+Core logic is covered by [Vitest](https://vitest.dev/) unit tests under `tests/`, including the state reducer, autosave/debounce/keyboard-shortcut/word-count hooks, export helpers, the diff engine, share-link encode/decode, the ranked search, the template library, markdown helpers, the IndexedDB layer, the input-validation schemas, storage persistence/quota handling, and backup export/restore (including id-collision re-keying and malformed-record rejection). Run them with `npm run test`.

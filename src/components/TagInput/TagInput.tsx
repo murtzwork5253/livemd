@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { LIMITS, validateTag } from '../../lib/validation';
 import './TagInput.css';
 
 interface TagInputProps {
@@ -8,13 +9,29 @@ interface TagInputProps {
 
 export function TagInput({ tags, onChange }: TagInputProps) {
   const [input, setInput] = useState('');
+  const [error, setError] = useState('');
 
   const addTag = (val: string) => {
-    const cleanTag = val.trim().toLowerCase().replace(/^#/, '');
-    if (cleanTag && !tags.includes(cleanTag)) {
-      onChange([...tags, cleanTag]);
+    // Normalize casing/`#` first, then validate against the strict tag schema.
+    const normalized = val.trim().toLowerCase().replace(/^#/, '');
+    if (!normalized) {
+      setInput('');
+      return;
+    }
+    if (tags.length >= LIMITS.tagsMaxCount) {
+      setError(`Maximum ${LIMITS.tagsMaxCount} tags`);
+      return;
+    }
+    const result = validateTag(normalized);
+    if (!result.ok) {
+      setError('Tags must be lowercase letters, numbers, and hyphens');
+      return;
+    }
+    if (!tags.includes(result.value)) {
+      onChange([...tags, result.value]);
     }
     setInput('');
+    setError('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -51,7 +68,11 @@ export function TagInput({ tags, onChange }: TagInputProps) {
         type="text"
         className="tag-input-field"
         value={input}
-        onChange={(e) => setInput(e.target.value)}
+        maxLength={LIMITS.tagMaxChars}
+        onChange={(e) => {
+          setInput(e.target.value);
+          if (error) setError('');
+        }}
         onKeyDown={handleKeyDown}
         onBlur={() => {
           if (input.trim()) {
@@ -60,7 +81,13 @@ export function TagInput({ tags, onChange }: TagInputProps) {
         }}
         placeholder={tags.length === 0 ? 'Add tags (press Enter or comma)...' : 'Add tag...'}
         aria-label="Add tag input"
+        aria-invalid={error ? true : undefined}
       />
+      {error && (
+        <span className="tag-input-error" role="alert">
+          {error}
+        </span>
+      )}
     </div>
   );
 }

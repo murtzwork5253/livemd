@@ -1,3 +1,5 @@
+import { LIMITS, readStreamCapped, validateEncodedShare, validateSharePayload } from './validation';
+
 /**
  * Encodes a string (UTF-8) to a compressed browser-safe Base64 string prefixed with 'v2:'.
  */
@@ -30,35 +32,43 @@ export async function encodeDocument(content: string, title: string): Promise<st
 export async function decodeDocument(
   encoded: string,
 ): Promise<{ content: string; title: string } | null> {
+  // Reject before decoding: length ceiling + base64 charset (guards atob/inflate).
+  const encodedCheck = validateEncodedShare(encoded);
+  if (!encodedCheck.ok) {
+    console.error('Rejected shared document:', encodedCheck.error);
+    return null;
+  }
+  const { body, compressed } = encodedCheck.value;
+
   try {
-    if (encoded.startsWith('v2:')) {
-      const cleanEncoded = encoded.slice(3);
-      const binaryString = atob(cleanEncoded);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const stream = new Blob([bytes]).stream();
-      const decompressedStream = stream.pipeThrough(new DecompressionStream('gzip'));
-      const payloadStr = await new Response(decompressedStream).text();
-      const parsed = JSON.parse(payloadStr);
+    const binaryString = atob(body);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
 
-      if (parsed && typeof parsed.content === 'string' && typeof parsed.title === 'string') {
-        return { content: parsed.content, title: parsed.title };
-      }
-      return null;
+    let payloadStr: string;
+    if (compressed) {
+      const decompressedStream = new Blob([bytes])
+        .stream()
+        .pipeThrough(new DecompressionStream('gzip'));
+      // Cap the inflated size so a tiny payload can't expand without bound (zip bomb).
+      const decompressed = await readStreamCapped(
+        decompressedStream,
+        LIMITS.shareDecompressedMaxBytes,
+      );
+      payloadStr = new TextDecoder().decode(decompressed);
     } else {
-      // Legacy uncompressed decoding
-      const binaryString = atob(encoded);
-      const bytes = new Uint8Array(binaryString.split('').map((char) => char.charCodeAt(0)));
-      const payloadStr = new TextDecoder().decode(bytes);
-      const parsed = JSON.parse(payloadStr);
+      // Legacy uncompressed payloads are already bounded by the encoded length ceiling.
+      payloadStr = new TextDecoder().decode(bytes);
+    }
 
-      if (parsed && typeof parsed.content === 'string' && typeof parsed.title === 'string') {
-        return { content: parsed.content, title: parsed.title };
-      }
+    const result = validateSharePayload(JSON.parse(payloadStr));
+    if (!result.ok) {
+      console.error('Rejected shared document:', result.error);
       return null;
     }
+    return result.value;
   } catch (err) {
     console.error('Failed to decode shared document:', err);
     return null;

@@ -1,0 +1,81 @@
+# Netlify configuration.
+#
+# Headers only — build settings stay in the Netlify UI so this file cannot
+# silently override them.
+#
+# These headers apply to the deployed site only. `npm run dev` is unaffected,
+# which is deliberate: a <meta http-equiv="Content-Security-Policy"> tag in
+# index.html would also apply in development and break Vite's HMR websocket.
+
+[[headers]]
+  for = "/*"
+
+  [headers.values]
+    # ---------------------------------------------------------------------
+    # Content-Security-Policy
+    #
+    # Every source below is one the app actually uses; see the notes.
+    # ---------------------------------------------------------------------
+    #
+    # script-src 'self'
+    #   Vite emits bundled script files and index.html carries no inline
+    #   script, so no hash or nonce is required. Keep it that way — adding an
+    #   inline <script> will break the deployed site.
+    #
+    # style-src 'unsafe-inline'
+    #   Required twice over, and not removable without a refactor:
+    #     1. React inline `style={{…}}` attributes (pane widths in App.tsx,
+    #        reading typography in PreviewPane.tsx) are inline styles under CSP.
+    #     2. PDF export renders into a srcdoc <iframe> that carries its own
+    #        <style> block; a srcdoc frame inherits this policy.
+    #
+    # style-src https://fonts.googleapis.com + font-src https://fonts.gstatic.com
+    #   src/styles/typography.css @imports the Lora / Inter / JetBrains Mono
+    #   stylesheets, which in turn load font files from gstatic. The @import
+    #   survives bundling as a remote URL, so both hosts must be allowed.
+    #
+    # img-src data:
+    #   Pasted and dropped images are embedded as base64 data URIs.
+    #
+    # img-src https:
+    #   Markdown routinely references remote images. Restricting this to 'self'
+    #   would silently break every ![](https://…) in a user's document. The
+    #   Referrer-Policy below stops those requests from leaking the page URL,
+    #   which matters because a shared link carries the whole document in its
+    #   query string.
+    #
+    # connect-src https://api.allorigins.win
+    #   The one network call the app makes: ShareModal's "Shorten link" button
+    #   proxies through allorigins to is.gd (ShareModal.tsx:85).
+    #
+    #   NOTE: that request sends the share URL — which carries the entire
+    #   compressed document in its query string — to a public CORS proxy and
+    #   then to a URL shortener. It is the only path by which document content
+    #   leaves the device. Dropping this origin from connect-src disables the
+    #   button and restores the app's fully-local guarantee.
+    #
+    # object-src / base-uri / form-action / frame-ancestors 'none'
+    #   No plugins, no <base> rewriting, no form posts, no embedding.
+    # Kept on one line on purpose: a newline inside an HTTP header value is
+    # illegal, so this does not depend on Netlify collapsing a TOML multiline
+    # string correctly.
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.allorigins.win; frame-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
+
+    # A share link holds the entire document in its query string. Without this,
+    # any remote image in that document would send the full URL — document text
+    # included — to a third-party host in the Referer header. `rel="noreferrer"`
+    # on links does not cover subresource requests; this does.
+    Referrer-Policy = "no-referrer"
+
+    # Legacy companion to frame-ancestors, for browsers that predate CSP 2.
+    X-Frame-Options = "DENY"
+
+    # Never let a response be reinterpreted as a type it didn't declare.
+    X-Content-Type-Options = "nosniff"
+
+    # The app requests none of these; deny them so nothing else can either.
+    Permissions-Policy = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+
+    # Pin HTTPS for a year. `includeSubDomains` is intentionally omitted — add
+    # it only once every subdomain of your custom domain is HTTPS-only.
+    Strict-Transport-Security = "max-age=31536000"
