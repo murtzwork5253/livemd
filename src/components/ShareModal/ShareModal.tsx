@@ -81,11 +81,14 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
     if (!url || url.startsWith('https://is.gd')) return;
     setIsShortening(true);
     setShortenError('');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
     try {
       const response = await fetch(
         `https://api.allorigins.win/get?url=${encodeURIComponent(
           `https://is.gd/create.php?format=json&url=${encodeURIComponent(url)}`,
         )}`,
+        { signal: controller.signal },
       );
       if (!response.ok) throw new Error('Shortening service is temporarily unavailable.');
 
@@ -113,9 +116,15 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
       }
     } catch (err: unknown) {
       console.error('Failed to shorten URL:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to shorten URL.';
+      const errorMessage =
+        err instanceof DOMException && err.name === 'AbortError'
+          ? 'Shortening request timed out. Please try again.'
+          : err instanceof Error
+            ? err.message
+            : 'Failed to shorten URL.';
       setShortenError(errorMessage);
     } finally {
+      clearTimeout(timeoutId);
       setIsShortening(false);
     }
   };
@@ -219,22 +228,31 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
               )}
 
               {!url.startsWith('https://is.gd') && (
-                <button
-                  className="share-shorten-btn"
-                  onClick={handleShorten}
-                  disabled={isShortening || isLocalhost}
-                  title={
-                    isLocalhost
-                      ? 'Public shorteners cannot redirect to localhost'
-                      : '⚡ Generate Short URL'
-                  }
-                >
-                  {isShortening
-                    ? 'Shortening link...'
-                    : isLocalhost
-                      ? '⚡ Shortening requires public domain'
-                      : '⚡ Generate Short URL'}
-                </button>
+                <>
+                  <button
+                    className="share-shorten-btn"
+                    onClick={handleShorten}
+                    disabled={isShortening || isLocalhost}
+                    title={
+                      isLocalhost
+                        ? 'Public shorteners cannot redirect to localhost'
+                        : '⚡ Generate Short URL'
+                    }
+                  >
+                    {isShortening
+                      ? 'Shortening link...'
+                      : isLocalhost
+                        ? '⚡ Shortening requires public domain'
+                        : '⚡ Generate Short URL'}
+                  </button>
+                  {!isLocalhost && (
+                    <p className="share-privacy-note">
+                      Shortening sends your compressed document URL through a third-party proxy (
+                      <code>api.allorigins.win</code> &rarr; <code>is.gd</code>), so content leaves
+                      your device.
+                    </p>
+                  )}
+                </>
               )}
 
               {isLocalhost && (

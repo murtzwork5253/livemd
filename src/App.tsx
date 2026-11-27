@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { useMarkdown } from './context/MarkdownContext';
 import { useToast } from './context/ToastContext';
@@ -7,18 +7,29 @@ import { PreviewPane } from './components/Preview/PreviewPane';
 import { Toolbar } from './components/Toolbar/Toolbar';
 import { useAutosave } from './hooks/useAutosave';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { ExportModal } from './components/ExportModal/ExportModal';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { useDocuments } from './hooks/useDocuments';
 import { saveDocument, getDocument, getAllDocuments } from './lib/db';
 import { getSharedDocFromURL } from './lib/shareLink';
 import { getStorageUsage, STORAGE_WARNING_PERCENT } from './lib/storage';
-import { ShareModal } from './components/ShareModal/ShareModal';
 import { useVersionHistory } from './hooks/useVersionHistory';
-import { HistoryPanel } from './components/HistoryPanel/HistoryPanel';
-import { SettingsModal } from './components/SettingsModal/SettingsModal';
-import { TemplateModal } from './components/TemplateModal/TemplateModal';
 import './App.css';
+
+const ExportModal = lazy(() =>
+  import('./components/ExportModal/ExportModal').then((m) => ({ default: m.ExportModal })),
+);
+const ShareModal = lazy(() =>
+  import('./components/ShareModal/ShareModal').then((m) => ({ default: m.ShareModal })),
+);
+const HistoryPanel = lazy(() =>
+  import('./components/HistoryPanel/HistoryPanel').then((m) => ({ default: m.HistoryPanel })),
+);
+const SettingsModal = lazy(() =>
+  import('./components/SettingsModal/SettingsModal').then((m) => ({ default: m.SettingsModal })),
+);
+const TemplateModal = lazy(() =>
+  import('./components/TemplateModal/TemplateModal').then((m) => ({ default: m.TemplateModal })),
+);
 
 export default function App() {
   const { state, dispatch } = useMarkdown();
@@ -119,6 +130,7 @@ export default function App() {
   });
   const [editorWidth, setEditorWidth] = useState(50); // percentage
   const isResizing = useRef(false);
+  const workspaceRef = useRef<HTMLElement>(null);
 
   // Sync the html data-theme with state.theme and save to localStorage
   useEffect(() => {
@@ -144,10 +156,12 @@ export default function App() {
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!isResizing.current) return;
-    const newWidth = (e.clientX / window.innerWidth) * 100;
-    if (newWidth > 20 && newWidth < 80) {
-      setEditorWidth(newWidth);
-    }
+    const rect = workspaceRef.current?.getBoundingClientRect();
+    const rawWidth =
+      rect && rect.width > 0
+        ? ((e.clientX - rect.left) / rect.width) * 100
+        : (e.clientX / window.innerWidth) * 100;
+    setEditorWidth(Math.min(80, Math.max(20, rawWidth)));
   };
 
   const handleMouseUp = () => {
@@ -393,7 +407,10 @@ export default function App() {
           <Sidebar />
         </div>
 
-        <main className={`workspace mode-${state.viewMode} mobile-tab-${mobileTab}`}>
+        <main
+          ref={workspaceRef}
+          className={`workspace mode-${state.viewMode} mobile-tab-${mobileTab}`}
+        >
           {state.documents.length === 0 && !state.isLoading ? (
             <div className="empty-workspace">
               <div className="empty-workspace-content">
@@ -487,44 +504,56 @@ export default function App() {
           )}
         </main>
 
-        <HistoryPanel
-          isOpen={isHistoryOpen}
-          onClose={() => setIsHistoryOpen(false)}
-          activeDocId={state.activeDocId}
-          onSnapshotRestored={() => {
-            // Take a snapshot right before restoring, so the user can easily undo if they want
-            createSnapshot('Before restore');
-          }}
-        />
+        <Suspense fallback={null}>
+          {isHistoryOpen && (
+            <HistoryPanel
+              isOpen={isHistoryOpen}
+              onClose={() => setIsHistoryOpen(false)}
+              activeDocId={state.activeDocId}
+              onSnapshotRestored={() => {
+                // Take a snapshot right before restoring, so the user can easily undo if they want
+                createSnapshot('Before restore');
+              }}
+            />
+          )}
+        </Suspense>
       </div>
 
-      <ExportModal
-        isOpen={isExportOpen}
-        onClose={() => setIsExportOpen(false)}
-        markdownContent={state.markdown}
-      />
-      <ShareModal
-        isOpen={isShareOpen}
-        onClose={() => setIsShareOpen(false)}
-        markdownContent={state.markdown}
-        documentTitle={
-          state.documents.find((d) => d.id === state.activeDocId)?.title || 'Untitled Document'
-        }
-      />
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-      {isTemplateModalOpen && (
-        <TemplateModal
-          onSelect={async (template) => {
-            await createDoc(template.getTitle(), template.getContent());
-            setIsTemplateModalOpen(false);
-          }}
-          onStartBlank={async () => {
-            await createDoc('Untitled Document');
-            setIsTemplateModalOpen(false);
-          }}
-          onClose={() => setIsTemplateModalOpen(false)}
-        />
-      )}
+      <Suspense fallback={null}>
+        {isExportOpen && (
+          <ExportModal
+            isOpen={isExportOpen}
+            onClose={() => setIsExportOpen(false)}
+            markdownContent={state.markdown}
+          />
+        )}
+        {isShareOpen && (
+          <ShareModal
+            isOpen={isShareOpen}
+            onClose={() => setIsShareOpen(false)}
+            markdownContent={state.markdown}
+            documentTitle={
+              state.documents.find((d) => d.id === state.activeDocId)?.title || 'Untitled Document'
+            }
+          />
+        )}
+        {isSettingsOpen && (
+          <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+        )}
+        {isTemplateModalOpen && (
+          <TemplateModal
+            onSelect={async (template) => {
+              await createDoc(template.getTitle(), template.getContent());
+              setIsTemplateModalOpen(false);
+            }}
+            onStartBlank={async () => {
+              await createDoc('Untitled Document');
+              setIsTemplateModalOpen(false);
+            }}
+            onClose={() => setIsTemplateModalOpen(false)}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

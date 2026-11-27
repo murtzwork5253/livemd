@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { useDocuments } from '../../hooks/useDocuments';
 import { useMarkdown } from '../../context/MarkdownContext';
 import { DocumentList } from './DocumentList';
-import { TemplateModal } from '../TemplateModal/TemplateModal';
 import { searchDocuments } from '../../lib/search';
 import type { Template } from '../../lib/templates';
 import './Sidebar.css';
+
+const TemplateModal = lazy(() =>
+  import('../TemplateModal/TemplateModal').then((m) => ({ default: m.TemplateModal })),
+);
 
 export function Sidebar() {
   const { documents, createDoc, openDoc, renameDoc, deleteDoc, activeDocId, isLoading } =
@@ -38,11 +41,13 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       {isTemplateModalOpen && (
-        <TemplateModal
-          onSelect={handleSelectTemplate}
-          onStartBlank={handleStartBlank}
-          onClose={() => setIsTemplateModalOpen(false)}
-        />
+        <Suspense fallback={null}>
+          <TemplateModal
+            onSelect={handleSelectTemplate}
+            onStartBlank={handleStartBlank}
+            onClose={() => setIsTemplateModalOpen(false)}
+          />
+        </Suspense>
       )}
       <div className="sidebar-header">
         <button className="new-doc-btn" onClick={handleCreateNew} aria-label="Create new document">
