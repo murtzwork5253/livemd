@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useMarkdown } from '../../context/MarkdownContext';
 import { DataBackup } from '../DataBackup/DataBackup';
+import { AnimatedModal } from '../Motion/AnimatedModal';
 import './SettingsModal.css';
 
 interface SettingsModalProps {
@@ -24,8 +25,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
   const shortcuts = [
     { name: 'Bold Text', keys: ['Ctrl', 'B'] },
     { name: 'Italic Text', keys: ['Ctrl', 'I'] },
@@ -40,15 +39,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   ];
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="modal-content settings-modal-content"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="settings-modal-title"
-      >
-        <div className="modal-header">
+    <AnimatedModal
+      isOpen={isOpen}
+      onClose={onClose}
+      ariaLabelledBy="settings-modal-title"
+      contentClassName="modal-content settings-modal-content"
+    >
+      <div className="modal-header">
           <h2 id="settings-modal-title">Settings</h2>
           <button className="close-btn" onClick={onClose} aria-label="Close modal">
             <svg
@@ -151,8 +148,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div> */}
           </section>
         </div>
-      </div>
-    </div>,
+    </AnimatedModal>,
     document.body,
   );
 }

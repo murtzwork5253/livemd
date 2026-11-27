@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { buildShareURL } from '../../lib/shareLink';
+import { AnimatedModal } from '../Motion/AnimatedModal';
 import './ShareModal.css';
 
 interface ShareModalProps {
@@ -19,6 +21,7 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isLoading = url === '';
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (isOpen) {
@@ -64,8 +67,6 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
 
   const handleCopy = async () => {
     try {
@@ -134,16 +135,9 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="modal-content"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="share-modal-title"
-      >
-        <div className="modal-header">
-          <h2 id="share-modal-title">Share Document</h2>
+    <AnimatedModal isOpen={isOpen} onClose={onClose} ariaLabelledBy="share-modal-title">
+      <div className="modal-header">
+        <h2 id="share-modal-title">Share Document</h2>
           <button className="close-btn" onClick={onClose} aria-label="Close modal">
             <svg
               viewBox="0 0 24 24"
@@ -203,13 +197,15 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
                   className="share-url-input"
                   aria-label="Shareable document URL"
                 />
-                <button
+                <motion.button
                   className={`share-copy-btn ${copied ? 'copied' : ''}`}
                   onClick={handleCopy}
                   aria-label="Copy share link"
+                  whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
                 >
                   {copied ? 'Copied!' : 'Copy'}
-                </button>
+                </motion.button>
               </div>
 
               {shortenError && (
@@ -229,10 +225,16 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
 
               {!url.startsWith('https://is.gd') && (
                 <>
-                  <button
+                  <motion.button
                     className="share-shorten-btn"
                     onClick={handleShorten}
                     disabled={isShortening || isLocalhost}
+                    whileHover={
+                      isShortening || isLocalhost || shouldReduceMotion ? undefined : { scale: 1.015 }
+                    }
+                    whileTap={
+                      isShortening || isLocalhost || shouldReduceMotion ? undefined : { scale: 0.985 }
+                    }
                     title={
                       isLocalhost
                         ? 'Public shorteners cannot redirect to localhost'
@@ -244,7 +246,7 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
                       : isLocalhost
                         ? '⚡ Shortening requires public domain'
                         : '⚡ Generate Short URL'}
-                  </button>
+                  </motion.button>
                   {!isLocalhost && (
                     <p className="share-privacy-note">
                       Shortening sends your compressed document URL through a third-party proxy (
@@ -279,8 +281,7 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </AnimatedModal>
   );
 }
 

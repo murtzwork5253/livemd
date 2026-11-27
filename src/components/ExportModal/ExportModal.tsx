@@ -7,6 +7,7 @@ import {
   exportPDFViaPrint,
   sanitizeExportFilename,
 } from '../../lib/export';
+import { AnimatedModal } from '../Motion/AnimatedModal';
 import './ExportModal.css';
 
 interface ExportModalProps {
@@ -43,8 +44,6 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
   }, [isOpen, onClose]);
 
   const [isExporting, setIsExporting] = useState<'markdown' | 'html' | 'pdf' | null>(null);
-
-  if (!isOpen) return null;
 
   const handleExportMarkdown = () => {
     if (isExporting) return;
@@ -85,15 +84,12 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
   };
 
   return (
-    <div className="modal-overlay" onClick={isExporting ? undefined : onClose}>
-      <div
-        className="modal-content"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-      >
-        <div className="modal-header">
+    <AnimatedModal
+      isOpen={isOpen}
+      onClose={isExporting ? () => {} : onClose}
+      ariaLabelledBy="modal-title"
+    >
+      <div className="modal-header">
           <h2 id="modal-title">Export Document</h2>
           <button
             className="close-btn"
@@ -264,11 +260,9 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
             </button>
           </div>
         </div>
-      </div>
-
       <div ref={hiddenPreviewRef} className="preview-content" style={{ display: 'none' }}>
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdownContent}</ReactMarkdown>
       </div>
-    </div>
+    </AnimatedModal>
   );
 }

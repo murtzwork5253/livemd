@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useDocuments } from '../../hooks/useDocuments';
 import { useMarkdown } from '../../context/MarkdownContext';
 import { DocumentList } from './DocumentList';
@@ -16,8 +17,11 @@ export function Sidebar() {
   const { state, dispatch } = useMarkdown();
   const { searchQuery, activeTagFilter } = state;
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [hasOpenedTemplateModal, setHasOpenedTemplateModal] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   const handleCreateNew = () => {
+    setHasOpenedTemplateModal(true);
     setIsTemplateModalOpen(true);
   };
 
@@ -40,9 +44,10 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar">
-      {isTemplateModalOpen && (
+      {hasOpenedTemplateModal && (
         <Suspense fallback={null}>
           <TemplateModal
+            isOpen={isTemplateModalOpen}
             onSelect={handleSelectTemplate}
             onStartBlank={handleStartBlank}
             onClose={() => setIsTemplateModalOpen(false)}
@@ -50,7 +55,13 @@ export function Sidebar() {
         </Suspense>
       )}
       <div className="sidebar-header">
-        <button className="new-doc-btn" onClick={handleCreateNew} aria-label="Create new document">
+        <motion.button
+          className="new-doc-btn"
+          onClick={handleCreateNew}
+          aria-label="Create new document"
+          whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
+          whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
+        >
           <svg
             viewBox="0 0 24 24"
             className="btn-icon"
@@ -64,7 +75,7 @@ export function Sidebar() {
             <path d="M12 5v14" />
           </svg>
           New Document
-        </button>
+        </motion.button>
       </div>
 
       <div className="sidebar-search">
