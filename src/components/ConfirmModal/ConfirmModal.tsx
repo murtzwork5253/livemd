@@ -36,6 +36,8 @@ export function ConfirmModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onCancel]);
 
+  if (typeof document === 'undefined') return null;
+
   return createPortal(
     <AnimatedModal
       isOpen={isOpen}

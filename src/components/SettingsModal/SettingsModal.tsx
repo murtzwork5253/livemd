@@ -38,6 +38,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     { name: 'Preview View', keys: ['Ctrl', 'Alt', '3'] },
   ];
 
+  if (typeof document === 'undefined') return null;
+
   return createPortal(
     <AnimatedModal
       isOpen={isOpen}

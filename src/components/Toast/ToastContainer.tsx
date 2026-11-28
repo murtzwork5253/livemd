@@ -15,6 +15,8 @@ interface ToastContainerProps {
 export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
   const shouldReduceMotion = useReducedMotion();
 
+  if (typeof document === 'undefined') return null;
+
   return createPortal(
     <div className="toast-container" aria-live="assertive" aria-atomic="false">
       <AnimatePresence initial={false}>
