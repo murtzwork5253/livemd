@@ -18,6 +18,7 @@ interface ExportModalProps {
 
 export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalProps) {
   const [filename, setFilename] = useState('document');
+  const [isExporting, setIsExporting] = useState<'markdown' | 'html' | 'pdf' | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hiddenPreviewRef = useRef<HTMLDivElement>(null);
 
@@ -31,19 +32,17 @@ export function ExportModal({ isOpen, onClose, markdownContent }: ExportModalPro
     }
   }, [isOpen]);
 
-  // Handle escape key to close modal
+  // Handle escape key to close modal (blocked while an export is in progress)
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !isExporting) {
         onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  const [isExporting, setIsExporting] = useState<'markdown' | 'html' | 'pdf' | null>(null);
+  }, [isOpen, isExporting, onClose]);
 
   const handleExportMarkdown = () => {
     if (isExporting) return;

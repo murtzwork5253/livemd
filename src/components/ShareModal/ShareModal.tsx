@@ -24,9 +24,11 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
   const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
+    let cancelled = false;
     if (isOpen) {
       buildShareURL(markdownContent, documentTitle)
         .then((generatedUrl) => {
+          if (cancelled) return;
           setUrl(generatedUrl);
           const sizeBytes = new TextEncoder().encode(generatedUrl).length;
           const calculatedSizeKB = Number((sizeBytes / 1024).toFixed(1));
@@ -34,11 +36,13 @@ export function ShareModal({ isOpen, onClose, markdownContent, documentTitle }: 
           setTooLarge(calculatedSizeKB > 8.0);
         })
         .catch((err) => {
+          if (cancelled) return;
           console.error('Failed to generate share URL:', err);
         });
     }
 
     return () => {
+      cancelled = true;
       setUrl('');
       setTooLarge(false);
       setIsShortening(false);

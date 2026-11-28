@@ -53,7 +53,20 @@ export default function App() {
     history: false,
   });
   const shouldReduceMotion = useReducedMotion();
+  const [isTablet, setIsTablet] = useState(() =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(min-width: 768px) and (max-width: 1024px)').matches
+      : false,
+  );
   const { createSnapshot } = useVersionHistory();
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mql = window.matchMedia('(min-width: 768px) and (max-width: 1024px)');
+    const onChange = (e: MediaQueryListEvent) => setIsTablet(e.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
 
   useEffect(() => {
     const initDocsAndShare = async () => {
@@ -498,8 +511,8 @@ export default function App() {
           className={`sidebar-container ${state.sidebarOpen ? 'open' : 'collapsed'}`}
           initial={false}
           animate={{
-            width: state.sidebarOpen ? 260 : 0,
-            minWidth: state.sidebarOpen ? 260 : 0,
+            width: state.sidebarOpen ? (isTablet ? 240 : 260) : 0,
+            minWidth: state.sidebarOpen ? (isTablet ? 240 : 260) : 0,
           }}
           transition={{ duration: shouldReduceMotion ? 0 : 0.22, ease: [0.4, 0, 0.2, 1] }}
         >
