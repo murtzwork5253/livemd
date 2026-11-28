@@ -22,6 +22,10 @@ export default defineConfig({
               test: /node_modules[\\/](react-markdown|remark-|rehype-|unified|mdast-|hast-|micromark|vfile|unist-|property-information|comma-separated-tokens|space-separated-tokens)/,
             },
             {
+              name: 'motion',
+              test: /node_modules[\\/]framer-motion/,
+            },
+            {
               name: 'vendor',
               test: /node_modules[\\/](react|react-dom|date-fns|idb|nanoid)/,
             },

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { Document } from '../../context/markdownReducer';
 
 interface DocumentListProps {
@@ -40,6 +41,7 @@ export function DocumentList({
   const [editTitle, setEditTitle] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (editingId && editInputRef.current) {
@@ -89,23 +91,29 @@ export function DocumentList({
 
   return (
     <ul className="document-list">
-      {documents.map((doc) => {
-        const isActive = doc.id === activeDocId;
-        const isEditing = doc.id === editingId;
-        const isDeleting = doc.id === deletingId;
+      <AnimatePresence initial={false}>
+        {documents.map((doc) => {
+          const isActive = doc.id === activeDocId;
+          const isEditing = doc.id === editingId;
+          const isDeleting = doc.id === deletingId;
 
-        return (
-          <li
-            key={doc.id}
-            className={`document-item ${isActive ? 'active' : ''} ${
-              isEditing ? 'editing' : ''
-            } ${isDeleting ? 'deleting-confirm' : ''}`}
-            onClick={() => {
-              if (!isEditing && !isDeleting) {
-                onOpen(doc.id);
-              }
-            }}
-          >
+          return (
+            <motion.li
+              key={doc.id}
+              layout={!shouldReduceMotion}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -12 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.15 }}
+              className={`document-item ${isActive ? 'active' : ''} ${
+                isEditing ? 'editing' : ''
+              } ${isDeleting ? 'deleting-confirm' : ''}`}
+              onClick={() => {
+                if (!isEditing && !isDeleting) {
+                  onOpen(doc.id);
+                }
+              }}
+            >
             {isEditing ? (
               <input
                 ref={editInputRef}
@@ -198,9 +206,10 @@ export function DocumentList({
                 </button>
               </>
             )}
-          </li>
+          </motion.li>
         );
       })}
+      </AnimatePresence>
     </ul>
   );
 }

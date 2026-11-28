@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { LIMITS, validateTag } from '../../lib/validation';
 import './TagInput.css';
 
@@ -10,6 +11,7 @@ interface TagInputProps {
 export function TagInput({ tags, onChange }: TagInputProps) {
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
+  const shouldReduceMotion = useReducedMotion();
 
   const addTag = (val: string) => {
     // Normalize casing/`#` first, then validate against the strict tag schema.
@@ -51,19 +53,29 @@ export function TagInput({ tags, onChange }: TagInputProps) {
 
   return (
     <div className="tag-input-container">
-      {tags.map((tag) => (
-        <span key={tag} className="tag-pill">
-          #{tag}
-          <button
-            type="button"
-            className="tag-remove-btn"
-            onClick={() => removeTag(tag)}
+      <AnimatePresence initial={false}>
+        {tags.map((tag) => (
+          <motion.span
+            key={tag}
+            layout={!shouldReduceMotion}
+            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.85 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.14 }}
+            className="tag-pill"
+          >
+            #{tag}
+            <button
+              type="button"
+              className="tag-remove-btn"
+              onClick={() => removeTag(tag)}
             aria-label={`Remove tag ${tag}`}
           >
             ✕
           </button>
-        </span>
-      ))}
+          </motion.span>
+        ))}
+      </AnimatePresence>
       <input
         type="text"
         className="tag-input-field"

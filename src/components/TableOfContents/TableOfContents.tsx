@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, memo } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { extractHeadings } from '../../lib/markdownHelpers';
 import './TableOfContents.css';
 
@@ -10,6 +11,7 @@ export const TableOfContents = memo(function TableOfContents({ markdown }: Table
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const shouldReduceMotion = useReducedMotion();
 
   const headings = useMemo(() => extractHeadings(markdown), [markdown]);
 
@@ -102,9 +104,17 @@ export const TableOfContents = memo(function TableOfContents({ markdown }: Table
         </svg>
       </button>
 
-      {isOpen && (
-        <div ref={panelRef} className="toc-panel">
-          <div className="toc-header">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            ref={panelRef}
+            className="toc-panel"
+            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: -6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: -6 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.14, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="toc-header">
             <h3>Table of Contents</h3>
             <button
               className="toc-close-btn"
@@ -143,8 +153,9 @@ export const TableOfContents = memo(function TableOfContents({ markdown }: Table
               </ul>
             )}
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 });

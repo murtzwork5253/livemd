@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { useMarkdown } from './context/MarkdownContext';
 import { useToast } from './context/ToastContext';
@@ -44,7 +45,28 @@ export default function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [openedModals, setOpenedModals] = useState({
+    export: false,
+    share: false,
+    settings: false,
+    template: false,
+    history: false,
+  });
+  const shouldReduceMotion = useReducedMotion();
+  const [isTablet, setIsTablet] = useState(() =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(min-width: 768px) and (max-width: 1024px)').matches
+      : false,
+  );
   const { createSnapshot } = useVersionHistory();
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mql = window.matchMedia('(min-width: 768px) and (max-width: 1024px)');
+    const onChange = (e: MediaQueryListEvent) => setIsTablet(e.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
 
   useEffect(() => {
     const initDocsAndShare = async () => {
@@ -174,9 +196,11 @@ export default function App() {
     <div className="app-container">
       <header className="app-header">
         <div className="header-left">
-          <button
+          <motion.button
             className={`sidebar-toggle-btn ${state.sidebarOpen ? 'active' : ''}`}
             onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
+            whileHover={shouldReduceMotion ? undefined : { scale: 1.06 }}
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.94 }}
             title={state.sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
             aria-label={state.sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
           >
@@ -192,7 +216,7 @@ export default function App() {
               <rect width="18" height="18" x="3" y="3" rx="2" />
               <path d="M9 3v18" />
             </svg>
-          </button>
+          </motion.button>
           <h1>LiveMD</h1>
         </div>
         <div
@@ -208,6 +232,13 @@ export default function App() {
             aria-pressed={state.viewMode === 'editor'}
             disabled={state.documents.length === 0}
           >
+            {state.viewMode === 'editor' && (
+              <motion.span
+                layoutId={shouldReduceMotion ? undefined : 'active-view-mode'}
+                className="view-mode-active-pill"
+                transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: [0.16, 1, 0.3, 1] }}
+              />
+            )}
             <svg
               viewBox="0 0 24 24"
               className="toggle-icon"
@@ -229,6 +260,13 @@ export default function App() {
             aria-pressed={state.viewMode === 'split'}
             disabled={state.documents.length === 0}
           >
+            {state.viewMode === 'split' && (
+              <motion.span
+                layoutId={shouldReduceMotion ? undefined : 'active-view-mode'}
+                className="view-mode-active-pill"
+                transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: [0.16, 1, 0.3, 1] }}
+              />
+            )}
             <svg
               viewBox="0 0 24 24"
               className="toggle-icon"
@@ -250,6 +288,13 @@ export default function App() {
             aria-pressed={state.viewMode === 'preview'}
             disabled={state.documents.length === 0}
           >
+            {state.viewMode === 'preview' && (
+              <motion.span
+                layoutId={shouldReduceMotion ? undefined : 'active-view-mode'}
+                className="view-mode-active-pill"
+                transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: [0.16, 1, 0.3, 1] }}
+              />
+            )}
             <svg
               viewBox="0 0 24 24"
               className="toggle-icon"
@@ -265,12 +310,25 @@ export default function App() {
           </button>
         </div>
         <div className="header-right">
-          <button
+          <motion.button
             className={`share-btn ${state.documents.length === 0 || state.isSharedView ? 'disabled' : ''}`}
-            onClick={() =>
-              !state.isSharedView && state.documents.length > 0 && setIsShareOpen(true)
-            }
+            onClick={() => {
+              if (!state.isSharedView && state.documents.length > 0) {
+                setOpenedModals((prev) => ({ ...prev, share: true }));
+                setIsShareOpen(true);
+              }
+            }}
             disabled={state.documents.length === 0 || state.isSharedView}
+            whileHover={
+              state.documents.length === 0 || state.isSharedView || shouldReduceMotion
+                ? undefined
+                : { scale: 1.06 }
+            }
+            whileTap={
+              state.documents.length === 0 || state.isSharedView || shouldReduceMotion
+                ? undefined
+                : { scale: 0.94 }
+            }
             title={
               state.isSharedView
                 ? 'Cannot share a shared link'
@@ -295,11 +353,22 @@ export default function App() {
               <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
               <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
             </svg>
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             className={`history-toggle-btn ${isHistoryOpen ? 'active' : ''} ${state.documents.length === 0 ? 'disabled' : ''}`}
-            onClick={() => state.documents.length > 0 && setIsHistoryOpen(!isHistoryOpen)}
+            onClick={() => {
+              if (state.documents.length > 0) {
+                setOpenedModals((prev) => ({ ...prev, history: true }));
+                setIsHistoryOpen(!isHistoryOpen);
+              }
+            }}
             disabled={state.documents.length === 0}
+            whileHover={
+              state.documents.length === 0 || shouldReduceMotion ? undefined : { scale: 1.06 }
+            }
+            whileTap={
+              state.documents.length === 0 || shouldReduceMotion ? undefined : { scale: 0.94 }
+            }
             title={state.documents.length === 0 ? 'No history available' : 'Version History'}
             aria-label="Version History"
           >
@@ -315,11 +384,22 @@ export default function App() {
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             className={`export-btn ${state.documents.length === 0 ? 'disabled' : ''}`}
-            onClick={() => state.documents.length > 0 && setIsExportOpen(true)}
+            onClick={() => {
+              if (state.documents.length > 0) {
+                setOpenedModals((prev) => ({ ...prev, export: true }));
+                setIsExportOpen(true);
+              }
+            }}
             disabled={state.documents.length === 0}
+            whileHover={
+              state.documents.length === 0 || shouldReduceMotion ? undefined : { scale: 1.06 }
+            }
+            whileTap={
+              state.documents.length === 0 || shouldReduceMotion ? undefined : { scale: 0.94 }
+            }
             title={state.documents.length === 0 ? 'No document to export' : 'Export Document'}
             aria-label="Export Document"
           >
@@ -336,7 +416,7 @@ export default function App() {
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" x2="12" y1="15" y2="3" />
             </svg>
-          </button>
+          </motion.button>
           {/* <div className="theme-toggle">
             <button
               onClick={() =>
@@ -356,9 +436,14 @@ export default function App() {
               )}
             </button>
           </div> */}
-          <button
+          <motion.button
             className="settings-btn"
-            onClick={() => setIsSettingsOpen(true)}
+            onClick={() => {
+              setOpenedModals((prev) => ({ ...prev, settings: true }));
+              setIsSettingsOpen(true);
+            }}
+            whileHover={shouldReduceMotion ? undefined : { scale: 1.06 }}
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.94 }}
             title="Settings"
             aria-label="Settings"
           >
@@ -374,38 +459,65 @@ export default function App() {
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
-          </button>
+          </motion.button>
         </div>
       </header>
 
-      {state.isSharedView && (
-        <div className="shared-banner" role="status">
-          <span>
-            You are viewing a shared document. Click <strong>Edit Copy</strong> to save a personal
-            copy.
-          </span>
-          <div className="shared-banner-actions">
-            <button className="banner-action-btn edit" onClick={handleCreatePersonalCopy}>
-              Edit Copy
-            </button>
-            <button
-              className="banner-close-btn"
-              onClick={handleDismissShareBanner}
-              aria-label="Dismiss banner"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {state.isSharedView && (
+          <motion.div
+            className="shared-banner"
+            role="status"
+            initial={shouldReduceMotion ? false : { height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <span>
+              You are viewing a shared document. Click <strong>Edit Copy</strong> to save a personal
+              copy.
+            </span>
+            <div className="shared-banner-actions">
+              <button className="banner-action-btn edit" onClick={handleCreatePersonalCopy}>
+                Edit Copy
+              </button>
+              <button
+                className="banner-close-btn"
+                onClick={handleDismissShareBanner}
+                aria-label="Dismiss banner"
+              >
+                ✕
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="app-body">
-        {state.sidebarOpen && (
-          <div className="sidebar-backdrop" onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })} />
-        )}
-        <div className={`sidebar-container ${state.sidebarOpen ? 'open' : 'collapsed'}`}>
+        <AnimatePresence>
+          {state.sidebarOpen && (
+            <motion.div
+              className="sidebar-backdrop"
+              onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
+              initial={shouldReduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.18 }}
+            />
+          )}
+        </AnimatePresence>
+        <motion.div
+          className={`sidebar-container ${state.sidebarOpen ? 'open' : 'collapsed'}`}
+          initial={false}
+          animate={{
+            width: state.sidebarOpen ? (isTablet ? 240 : 260) : 0,
+            minWidth: state.sidebarOpen ? (isTablet ? 240 : 260) : 0,
+          }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.22, ease: [0.4, 0, 0.2, 1] }}
+        >
           <Sidebar />
-        </div>
+        </motion.div>
 
         <main
           ref={workspaceRef}
@@ -435,9 +547,14 @@ export default function App() {
                   Create a new document to get started. Your documents are stored securely in your
                   browser's IndexedDB.
                 </p>
-                <button
+                <motion.button
                   className="create-first-doc-btn"
-                  onClick={() => setIsTemplateModalOpen(true)}
+                  onClick={() => {
+                    setOpenedModals((prev) => ({ ...prev, template: true }));
+                    setIsTemplateModalOpen(true);
+                  }}
+                  whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
                   aria-label="Create your first document"
                 >
                   <svg
@@ -452,7 +569,7 @@ export default function App() {
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
                   Create Document
-                </button>
+                </motion.button>
               </div>
             </div>
           ) : (
@@ -505,7 +622,7 @@ export default function App() {
         </main>
 
         <Suspense fallback={null}>
-          {isHistoryOpen && (
+          {openedModals.history && (
             <HistoryPanel
               isOpen={isHistoryOpen}
               onClose={() => setIsHistoryOpen(false)}
@@ -520,14 +637,14 @@ export default function App() {
       </div>
 
       <Suspense fallback={null}>
-        {isExportOpen && (
+        {openedModals.export && (
           <ExportModal
             isOpen={isExportOpen}
             onClose={() => setIsExportOpen(false)}
             markdownContent={state.markdown}
           />
         )}
-        {isShareOpen && (
+        {openedModals.share && (
           <ShareModal
             isOpen={isShareOpen}
             onClose={() => setIsShareOpen(false)}
@@ -537,11 +654,12 @@ export default function App() {
             }
           />
         )}
-        {isSettingsOpen && (
+        {openedModals.settings && (
           <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
         )}
-        {isTemplateModalOpen && (
+        {openedModals.template && (
           <TemplateModal
+            isOpen={isTemplateModalOpen}
             onSelect={async (template) => {
               await createDoc(template.getTitle(), template.getContent());
               setIsTemplateModalOpen(false);

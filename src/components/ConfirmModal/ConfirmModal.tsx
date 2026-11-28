@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatedModal } from '../Motion/AnimatedModal';
 import './ConfirmModal.css';
 
 interface ConfirmModalProps {
@@ -35,47 +36,44 @@ export function ConfirmModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onCancel]);
 
-  if (!isOpen) return null;
+  if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className="modal-overlay" onClick={onCancel}>
-      <div
-        className="modal-content confirm-modal-content"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="confirm-modal-title"
-      >
-        <div className="modal-header">
-          <h2 id="confirm-modal-title">{title}</h2>
-          <button className="close-btn" onClick={onCancel} aria-label="Close modal">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+    <AnimatedModal
+      isOpen={isOpen}
+      onClose={onCancel}
+      ariaLabelledBy="confirm-modal-title"
+      contentClassName="modal-content confirm-modal-content"
+    >
+      <div className="modal-header">
+        <h2 id="confirm-modal-title">{title}</h2>
+        <button className="close-btn" onClick={onCancel} aria-label="Close modal">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="modal-body confirm-modal-body">
+        <p className="confirm-modal-message">{message}</p>
+        <div className="confirm-modal-actions">
+          <button className="confirm-action-btn cancel" onClick={onCancel}>
+            {cancelLabel}
+          </button>
+          <button className={`confirm-action-btn confirm ${variant}`} onClick={onConfirm}>
+            {confirmLabel}
           </button>
         </div>
-
-        <div className="modal-body confirm-modal-body">
-          <p className="confirm-modal-message">{message}</p>
-          <div className="confirm-modal-actions">
-            <button className="confirm-action-btn cancel" onClick={onCancel}>
-              {cancelLabel}
-            </button>
-            <button className={`confirm-action-btn confirm ${variant}`} onClick={onConfirm}>
-              {confirmLabel}
-            </button>
-          </div>
-        </div>
       </div>
-    </div>,
+    </AnimatedModal>,
     document.body,
   );
 }

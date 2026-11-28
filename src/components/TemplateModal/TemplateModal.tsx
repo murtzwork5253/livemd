@@ -1,29 +1,29 @@
-import React from 'react';
 import { TEMPLATES } from '../../lib/templates';
 import type { Template } from '../../lib/templates';
+import { AnimatedModal } from '../Motion/AnimatedModal';
 import './TemplateModal.css';
 
 interface TemplateModalProps {
+  isOpen?: boolean;
   onSelect: (template: Template) => void;
   onStartBlank: () => void;
   onClose: () => void;
 }
 
-export function TemplateModal({ onSelect, onStartBlank, onClose }: TemplateModalProps) {
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
+export function TemplateModal({
+  isOpen = true,
+  onSelect,
+  onStartBlank,
+  onClose,
+}: TemplateModalProps) {
   return (
-    <div className="template-modal-overlay" onClick={handleOverlayClick}>
-      <div
-        className="template-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="template-modal-title"
-      >
+    <AnimatedModal
+      isOpen={isOpen}
+      onClose={onClose}
+      ariaLabelledBy="template-modal-title"
+      overlayClassName="template-modal-overlay"
+      contentClassName="template-modal"
+    >
         <header className="template-modal-header">
           <h2 id="template-modal-title">Choose a template</h2>
           <button className="close-btn" onClick={onClose} aria-label="Close template selector">
@@ -59,8 +59,7 @@ export function TemplateModal({ onSelect, onStartBlank, onClose }: TemplateModal
             Start Blank
           </button>
         </footer>
-      </div>
-    </div>
+    </AnimatedModal>
   );
 }
 export default TemplateModal;
