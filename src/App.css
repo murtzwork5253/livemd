@@ -476,16 +476,12 @@
     background: rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(3px);
     z-index: 999;
-    animation: fadeInBackdrop 0.2s ease-out;
   }
 }
 
-@keyframes fadeInBackdrop {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-container {
+    transition: none !important;
   }
 }
 
@@ -746,7 +742,6 @@
   font-size: 0.85rem;
   color: var(--text-primary);
   z-index: 100;
-  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .shared-banner-actions {
@@ -787,15 +782,6 @@
 .banner-close-btn:hover {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
-}
-
-@keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-  }
-  to {
-    transform: translateY(0);
-  }
 }
 
 /* History Toggle Button */
