@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { ReadingSettings } from '../../context/markdownReducer';
 import './TypographyPanel.css';
 
@@ -10,6 +11,7 @@ interface TypographyPanelProps {
 export function TypographyPanel({ settings, onChange }: TypographyPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
 
   // Close panel if clicked outside
   useEffect(() => {
@@ -29,9 +31,18 @@ export function TypographyPanel({ settings, onChange }: TypographyPanelProps) {
 
   return (
     <div className="typography-panel-container" ref={panelRef}>
-      {isOpen && (
-        <div className="typography-panel" role="dialog" aria-label="Typography settings">
-          <div className="typography-section">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="typography-panel"
+            role="dialog"
+            aria-label="Typography settings"
+            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 6 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.14, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="typography-section">
             <span className="section-title">Font Family</span>
             <div className="font-selector">
               {(['serif', 'sans', 'mono'] as const).map((font) => (
@@ -96,8 +107,9 @@ export function TypographyPanel({ settings, onChange }: TypographyPanelProps) {
               aria-label="Text column max width in pixels"
             />
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <button
         className={`typography-trigger-btn ${isOpen ? 'active' : ''}`}

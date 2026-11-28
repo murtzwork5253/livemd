@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { getSnapshotsForDoc, deleteSnapshot, type Snapshot } from '../../lib/db';
 import { computeDiff } from '../../lib/diff';
 import { useMarkdown } from '../../context/MarkdownContext';
@@ -22,6 +23,7 @@ export function HistoryPanel({
   const { state, dispatch } = useMarkdown();
   const { snapshots } = state;
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const shouldReduceMotion = useReducedMotion();
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
     title: string;
@@ -111,8 +113,17 @@ export function HistoryPanel({
   };
 
   return (
-    <aside className={`history-panel ${isOpen ? 'open' : 'collapsed'}`}>
-      <div className="history-panel-header">
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.aside
+            className="history-panel open"
+            initial={shouldReduceMotion ? false : { x: '100%' }}
+            animate={{ x: 0 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { x: '100%' }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.22, ease: [0.4, 0, 0.2, 1] }}
+          >
+            <div className="history-panel-header">
         <h2>Version History</h2>
         <button className="close-history-btn" onClick={onClose} aria-label="Close history panel">
           <svg
@@ -192,9 +203,17 @@ export function HistoryPanel({
                     </div>
                   </div>
 
-                  {isExpanded && (
-                    <div className="snapshot-detail">
-                      <div className="snapshot-detail-header">
+                  <AnimatePresence initial={false}>
+                    {isExpanded && (
+                      <motion.div
+                        className="snapshot-detail"
+                        initial={shouldReduceMotion ? false : { height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.18 }}
+                        style={{ overflow: 'hidden' }}
+                      >
+                        <div className="snapshot-detail-header">
                         <span>Line Diff (vs. Previous Version)</span>
                         <button
                           className="snapshot-restore-btn"
@@ -237,14 +256,19 @@ export function HistoryPanel({
                           ))}
                         </pre>
                       </div>
-                    </div>
-                  )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </li>
               );
             })}
           </ul>
         )}
       </div>
+
+          </motion.aside>
+        )}
+      </AnimatePresence>
 
       <ConfirmModal
         isOpen={confirmState.isOpen}
@@ -255,7 +279,7 @@ export function HistoryPanel({
         onConfirm={confirmState.onConfirm}
         onCancel={() => setConfirmState((prev) => ({ ...prev, isOpen: false }))}
       />
-    </aside>
+    </>
   );
 }
 

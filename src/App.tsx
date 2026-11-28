@@ -50,6 +50,7 @@ export default function App() {
     share: false,
     settings: false,
     template: false,
+    history: false,
   });
   const shouldReduceMotion = useReducedMotion();
   const { createSnapshot } = useVersionHistory();
@@ -218,6 +219,13 @@ export default function App() {
             aria-pressed={state.viewMode === 'editor'}
             disabled={state.documents.length === 0}
           >
+            {state.viewMode === 'editor' && (
+              <motion.span
+                layoutId={shouldReduceMotion ? undefined : 'active-view-mode'}
+                className="view-mode-active-pill"
+                transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: [0.16, 1, 0.3, 1] }}
+              />
+            )}
             <svg
               viewBox="0 0 24 24"
               className="toggle-icon"
@@ -239,6 +247,13 @@ export default function App() {
             aria-pressed={state.viewMode === 'split'}
             disabled={state.documents.length === 0}
           >
+            {state.viewMode === 'split' && (
+              <motion.span
+                layoutId={shouldReduceMotion ? undefined : 'active-view-mode'}
+                className="view-mode-active-pill"
+                transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: [0.16, 1, 0.3, 1] }}
+              />
+            )}
             <svg
               viewBox="0 0 24 24"
               className="toggle-icon"
@@ -260,6 +275,13 @@ export default function App() {
             aria-pressed={state.viewMode === 'preview'}
             disabled={state.documents.length === 0}
           >
+            {state.viewMode === 'preview' && (
+              <motion.span
+                layoutId={shouldReduceMotion ? undefined : 'active-view-mode'}
+                className="view-mode-active-pill"
+                transition={{ duration: shouldReduceMotion ? 0 : 0.18, ease: [0.16, 1, 0.3, 1] }}
+              />
+            )}
             <svg
               viewBox="0 0 24 24"
               className="toggle-icon"
@@ -321,7 +343,12 @@ export default function App() {
           </motion.button>
           <motion.button
             className={`history-toggle-btn ${isHistoryOpen ? 'active' : ''} ${state.documents.length === 0 ? 'disabled' : ''}`}
-            onClick={() => state.documents.length > 0 && setIsHistoryOpen(!isHistoryOpen)}
+            onClick={() => {
+              if (state.documents.length > 0) {
+                setOpenedModals((prev) => ({ ...prev, history: true }));
+                setIsHistoryOpen(!isHistoryOpen);
+              }
+            }}
             disabled={state.documents.length === 0}
             whileHover={
               state.documents.length === 0 || shouldReduceMotion ? undefined : { scale: 1.06 }
@@ -423,26 +450,36 @@ export default function App() {
         </div>
       </header>
 
-      {state.isSharedView && (
-        <div className="shared-banner" role="status">
-          <span>
-            You are viewing a shared document. Click <strong>Edit Copy</strong> to save a personal
-            copy.
-          </span>
-          <div className="shared-banner-actions">
-            <button className="banner-action-btn edit" onClick={handleCreatePersonalCopy}>
-              Edit Copy
-            </button>
-            <button
-              className="banner-close-btn"
-              onClick={handleDismissShareBanner}
-              aria-label="Dismiss banner"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {state.isSharedView && (
+          <motion.div
+            className="shared-banner"
+            role="status"
+            initial={shouldReduceMotion ? false : { height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <span>
+              You are viewing a shared document. Click <strong>Edit Copy</strong> to save a personal
+              copy.
+            </span>
+            <div className="shared-banner-actions">
+              <button className="banner-action-btn edit" onClick={handleCreatePersonalCopy}>
+                Edit Copy
+              </button>
+              <button
+                className="banner-close-btn"
+                onClick={handleDismissShareBanner}
+                aria-label="Dismiss banner"
+              >
+                ✕
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="app-body">
         <AnimatePresence>
@@ -572,7 +609,7 @@ export default function App() {
         </main>
 
         <Suspense fallback={null}>
-          {isHistoryOpen && (
+          {openedModals.history && (
             <HistoryPanel
               isOpen={isHistoryOpen}
               onClose={() => setIsHistoryOpen(false)}
