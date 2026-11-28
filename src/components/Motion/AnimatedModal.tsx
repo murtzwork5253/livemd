@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import './AnimatedModal.css';
 
 interface AnimatedModalProps {
   isOpen: boolean;
